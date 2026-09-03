@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useState } from "react";
+import { FiArrowLeft } from "react-icons/fi";
 
 export default function EquipmentDetail() {
     const { id } = useParams();
@@ -7,7 +8,14 @@ export default function EquipmentDetail() {
     const [endDate, setEndDate] = useState("");
 
     const pricePerDay = 350000;
+    const [activeImage, setActiveImage] = useState(0);
 
+    const equipmentImages = [
+        "/images/sony-a7iii-1.jpg",
+        "/images/sony-a7iii-2.jpg",
+        "/images/sony-a7iii-3.jpg",
+        "/images/sony-a7iii-4.jpg",
+    ];
     const calculateDuration = () => {
         if (!startDate || !endDate) return 0;
 
@@ -26,13 +34,89 @@ export default function EquipmentDetail() {
     return (
         <div style={styles.page}>
             <header style={styles.header}>
-                <Link to="/equipment">←</Link>
-                <strong>Detail Equipment</strong>
-                <div></div>
+                <div style={styles.headerInner}>
+                    <Link to="/equipment" style={styles.backButton}>
+                        <FiArrowLeft size={20} />
+                    </Link>
+
+                    <div style={styles.headerText}>
+                        <small style={styles.small}>KANCHA RENTAL</small>
+                        <h2 style={styles.headerTitle}>Detail Equipment</h2>
+                    </div>
+                </div>
             </header>
 
             <main style={styles.container}>
-                <div style={styles.image}>📷</div>
+                <div style={styles.gallery}>
+                    {/* GAMBAR UTAMA */}
+                    <div style={styles.mainImageWrapper}>
+                        <img
+                            src={equipmentImages[activeImage]}
+                            alt={`Sony A7 III ${activeImage + 1}`}
+                            style={styles.mainImage}
+                        />
+
+                        {/* COUNTER */}
+                        <span style={styles.imageCounter}>
+                            {activeImage + 1} / {equipmentImages.length}
+                        </span>
+
+                        {/* PREVIOUS */}
+                        <button
+                            type="button"
+                            style={{
+                                ...styles.sliderButton,
+                                left: 10,
+                            }}
+                            onClick={() =>
+                                setActiveImage((prev) =>
+                                    prev === 0 ? equipmentImages.length - 1 : prev - 1
+                                )
+                            }
+                        >
+                            ‹
+                        </button>
+
+                        {/* NEXT */}
+                        <button
+                            type="button"
+                            style={{
+                                ...styles.sliderButton,
+                                right: 10,
+                            }}
+                            onClick={() =>
+                                setActiveImage((prev) =>
+                                    prev === equipmentImages.length - 1 ? 0 : prev + 1
+                                )
+                            }
+                        >
+                            ›
+                        </button>
+                    </div>
+
+                    {/* THUMBNAIL */}
+                    <div style={styles.thumbnails}>
+                        {equipmentImages.map((image, index) => (
+                            <button
+                                key={image}
+                                type="button"
+                                onClick={() => setActiveImage(index)}
+                                style={{
+                                    ...styles.thumbnailButton,
+                                    ...(activeImage === index
+                                        ? styles.thumbnailActive
+                                        : {}),
+                                }}
+                            >
+                                <img
+                                    src={image}
+                                    alt=""
+                                    style={styles.thumbnailImage}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <small style={styles.category}>CAMERA</small>
 
@@ -167,12 +251,51 @@ const styles = {
         background: "#fff",
     },
     header: {
+        position: "sticky",
+        top: 0,
+        zIndex: 1000,
+        width: "100%",
+        background: "rgba(255,255,255,.96)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        borderBottom: "1px solid #f1f1f1",
+    },
+    headerInner: {
+        width: "100%",
         maxWidth: 700,
         margin: "0 auto",
-        padding: 20,
-        display: "grid",
-        gridTemplateColumns: "50px 1fr 50px",
-        textAlign: "center",
+        padding: "12px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+    },
+
+    backButton: {
+        width: 38,
+        height: 38,
+        minWidth: 38,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 10,
+        background: "#f3f4f6",
+        color: "#111827",
+        textDecoration: "none",
+    },
+    headerText: {
+        flex: 1,
+    },
+
+    small: {
+        fontSize: 9,
+        color: "#9ca3af",
+        letterSpacing: 1.2,
+        fontWeight: 700,
+    },
+
+    headerTitle: {
+        margin: "2px 0 0",
+        fontSize: 19,
     },
     container: {
         maxWidth: 700,
@@ -310,5 +433,82 @@ const styles = {
         color: "#fff",
         fontSize: 13,
         fontWeight: 700,
+    },
+    gallery: {
+        width: "100%",
+        marginBottom: 18,
+    },
+
+    mainImageWrapper: {
+        position: "relative",
+        width: "100%",
+        height: 280,
+        overflow: "hidden",
+        borderRadius: 16,
+        background: "#f3f4f6",
+    },
+
+    mainImage: {
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+        display: "block",
+    },
+
+    imageCounter: {
+        position: "absolute",
+        right: 10,
+        bottom: 10,
+        padding: "5px 9px",
+        borderRadius: 999,
+        background: "rgba(17,24,39,.75)",
+        color: "#fff",
+        fontSize: 10,
+        fontWeight: 700,
+    },
+
+    sliderButton: {
+        position: "absolute",
+        top: "50%",
+        transform: "translateY(-50%)",
+        width: 34,
+        height: 34,
+        border: 0,
+        borderRadius: "50%",
+        background: "rgba(255,255,255,.9)",
+        color: "#111827",
+        fontSize: 24,
+        lineHeight: 1,
+        cursor: "pointer",
+        boxShadow: "0 2px 8px rgba(0,0,0,.12)",
+    },
+
+    thumbnails: {
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: 8,
+        marginTop: 8,
+    },
+
+    thumbnailButton: {
+        height: 62,
+        padding: 2,
+        border: "2px solid transparent",
+        borderRadius: 10,
+        background: "#f3f4f6",
+        overflow: "hidden",
+        cursor: "pointer",
+    },
+
+    thumbnailActive: {
+        border: "2px solid #111827",
+    },
+
+    thumbnailImage: {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        borderRadius: 7,
+        display: "block",
     },
 };
