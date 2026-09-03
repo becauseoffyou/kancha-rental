@@ -35,24 +35,31 @@ export default function Equipment() {
     return (
         <div style={styles.page}>
             <header style={styles.header}>
-                <Link to="/">←</Link>
-                <h2 style={styles.title}>Equipment</h2>
-                <div></div>
+                <div style={styles.headerInner}>
+                    <div>
+                        <small style={styles.small}>KANCHA RENTAL</small>
+                        <h2 style={styles.title}>Equipment</h2>
+                    </div>
+                </div>
+
+                <div style={styles.filterBar}>
+                    <input
+                        style={styles.search}
+                        placeholder="Cari kamera, lensa, lighting..."
+                    />
+
+                    <div style={styles.filters}>
+                        <button style={styles.activeFilter}>Semua</button>
+                        <button style={styles.filter}>Kamera</button>
+                        <button style={styles.filter}>Lensa</button>
+                        <button style={styles.filter}>Lighting</button>
+                        <button style={styles.filter}>Audio</button>
+                    </div>
+                </div>
             </header>
 
             <div style={styles.content}>
-                <input
-                    style={styles.search}
-                    placeholder="Cari kamera, lensa, lighting..."
-                />
 
-                <div style={styles.filters}>
-                    <button style={styles.activeFilter}>Semua</button>
-                    <button style={styles.filter}>Kamera</button>
-                    <button style={styles.filter}>Lensa</button>
-                    <button style={styles.filter}>Lighting</button>
-                    <button style={styles.filter}>Audio</button>
-                </div>
 
                 <div style={styles.grid}>
                     {equipment.map((item) => (
@@ -91,52 +98,82 @@ const styles = {
         paddingBottom: 90,
     },
     header: {
+        position: "sticky",
+        top: 0,
+        zIndex: 1000,
+        width: "100%",
+        background: "rgba(255,255,255,.96)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        borderBottom: "1px solid #f1f1f1",
+    },
+    headerInner: {
+        width: "100%",
         maxWidth: 1100,
         margin: "0 auto",
-        padding: "20px",
-        display: "grid",
-        gridTemplateColumns: "50px 1fr 50px",
-        alignItems: "center",
-        background: "#fff",
+        padding: "14px 16px 10px",
+    },
+    small: {
+        fontSize: 10,
+        color: "#9ca3af",
+        letterSpacing: 1.3,
+        fontWeight: 700,
     },
     title: {
-        margin: 0,
-        textAlign: "center",
+        margin: "3px 0 0",
+        fontSize: 22,
     },
-    content: {
+    filterBar: {
+        width: "100%",
         maxWidth: 1100,
         margin: "0 auto",
-        padding: 20,
+        padding: "0 16px 12px",
     },
+
     search: {
         width: "100%",
-        padding: "15px 16px",
-        borderRadius: 14,
+        padding: "12px 14px",
         border: "1px solid #e5e7eb",
-        fontSize: 15,
+        borderRadius: 12,
+        fontSize: 14,
+        outline: "none",
         background: "#fff",
     },
     filters: {
         display: "flex",
         gap: 8,
         overflowX: "auto",
-        margin: "16px 0 24px",
+        marginTop: 10,
+        paddingBottom: 2,
     },
+
     filter: {
         border: "1px solid #e5e7eb",
         background: "#fff",
-        padding: "10px 16px",
-        borderRadius: 30,
+        padding: "8px 12px",
+        borderRadius: 999,
+        fontSize: 12,
         whiteSpace: "nowrap",
+        cursor: "pointer",
     },
+
     activeFilter: {
-        border: 0,
+        border: "1px solid #111827",
         background: "#111827",
         color: "#fff",
-        padding: "10px 16px",
-        borderRadius: 30,
+        padding: "8px 12px",
+        borderRadius: 999,
+        fontSize: 12,
         whiteSpace: "nowrap",
+        cursor: "pointer",
     },
+    content: {
+        width: "100%",
+        maxWidth: 1100,
+        margin: "0 auto",
+        padding: "14px 16px 90px",
+    },
+
     grid: {
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
