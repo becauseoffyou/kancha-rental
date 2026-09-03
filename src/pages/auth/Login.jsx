@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import BottomNav from "../../components/BottomNav";
 
 export default function Login() {
     return (
@@ -30,6 +31,7 @@ export default function Login() {
                     </Link>
                 </p>
             </div>
+            <BottomNav />
         </div>
     );
 }
@@ -40,7 +42,7 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 20,
+        padding: "20px 20px 90px",
         background: "#f5f6f8",
     },
     card: {

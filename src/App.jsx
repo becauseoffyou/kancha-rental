@@ -4,6 +4,8 @@ import Register from "./pages/auth/Register";
 import Home from "./pages/Home";
 import Equipment from "./pages/Equipment";
 import EquipmentDetail from "./pages/EquipmentDetail";
+import Booking from "./pages/Booking";
+import Profile from "./pages/Profil";
 
 function App() {
   return (
@@ -12,9 +14,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
+        <Route path="/booking" element={<Booking />} />
         <Route path="/equipment" element={<Equipment />} />
         <Route path="/equipment/:id" element={<EquipmentDetail />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );
