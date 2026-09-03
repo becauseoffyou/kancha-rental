@@ -6,6 +6,7 @@ import Equipment from "./pages/Equipment";
 import EquipmentDetail from "./pages/EquipmentDetail";
 import Booking from "./pages/Booking";
 import Profile from "./pages/Profil";
+import BookingDetail from "./pages/BookingDetail";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/equipment" element={<Equipment />} />
         <Route path="/equipment/:id" element={<EquipmentDetail />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/booking/:id" element={<BookingDetail />} />
       </Routes>
     </BrowserRouter>
   );
