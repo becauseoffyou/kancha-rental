@@ -7,6 +7,7 @@ import EquipmentDetail from "./pages/EquipmentDetail";
 import Booking from "./pages/Booking";
 import Profile from "./pages/Profil";
 import BookingDetail from "./pages/BookingDetail";
+import Invoice from "./pages/Invoice";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/equipment/:id" element={<EquipmentDetail />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/booking/:id" element={<BookingDetail />} />
+        <Route path="/invoice/:id" element={<Invoice />} />
       </Routes>
     </BrowserRouter>
   );

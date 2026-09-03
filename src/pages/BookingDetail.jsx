@@ -193,10 +193,8 @@ export default function BookingDetail() {
                         to={`/invoice/${booking.id}`}
                         style={styles.invoiceButton}
                     >
-                        <FiFileText size={17} />
                         Lihat Invoice
                     </Link>
-
                     {booking.paymentStatus === "Belum Dibayar" && (
                         <button style={styles.payButton}>
                             <FiCheckCircle size={17} />

@@ -20,6 +20,16 @@ const bookings = [
 ];
 
 export default function Booking() {
+
+    const handleCancel = (bookingId) => {
+        const confirmCancel = window.confirm(
+            "Apakah Anda yakin ingin membatalkan pesanan ini?"
+        );
+
+        if (confirmCancel) {
+            alert(`Pesanan ${bookingId} dibatalkan`);
+        }
+    };
     return (
         <div style={styles.page}>
             <header style={styles.header}>
@@ -83,19 +93,32 @@ export default function Booking() {
 
                             {/* {booking.status !== "Selesai" && ( */}
                             <div style={styles.actions}>
-                                <Link
-                                    to={`/booking/${booking.id}`}
-                                    style={styles.buttonLink}
+                                <div
+                                    style={{
+                                        ...styles.actions,
+                                        gridTemplateColumns:
+                                            booking.status === "Menunggu Pembayaran"
+                                                ? "1fr 1fr"
+                                                : "1fr",
+                                    }}
                                 >
-                                    Lihat Detail
-                                </Link>
+                                    <Link
+                                        to={`/booking/${booking.id}`}
+                                        style={styles.buttonLink}
+                                    >
+                                        Lihat Detail
+                                    </Link>
 
-                                <button
-                                    style={styles.invoiceButton}
-                                    onClick={() => alert(`Invoice ${booking.id}`)}
-                                >
-                                    Invoice
-                                </button>
+                                    {booking.status === "Menunggu Pembayaran" && (
+                                        <button
+                                            type="button"
+                                            style={styles.cancelButton}
+                                            onClick={() => handleCancel(booking.id)}
+                                        >
+                                            Batalkan
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             {/* )} */}
                         </div>
@@ -279,7 +302,7 @@ const styles = {
         cursor: "pointer",
     },
     actions: {
-        display: "flex",
+        display: "grid",
         gap: 10,
         marginTop: 16,
     },
@@ -296,14 +319,38 @@ const styles = {
     },
 
     buttonLink: {
-        flex: 1,
-        padding: 12,
+        width: "100%",
+        height: 42,
+        padding: "0 12px",
+        border: "1px solid #111827",
         borderRadius: 12,
         background: "#111827",
         color: "#fff",
+        fontSize: 13,
         fontWeight: 700,
-        textAlign: "center",
         textDecoration: "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+    },
+
+    cancelButton: {
+        width: "100%",
+        height: 42,
+        padding: "0 12px",
+        border: "1px solid #dc2626",
+        borderRadius: 12,
+        background: "#fff",
+        color: "#dc2626",
+        fontSize: 13,
+        fontWeight: 700,
+        fontFamily: "inherit",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
     },
 
     invoiceButton: {
@@ -311,9 +358,11 @@ const styles = {
         padding: 12,
         border: "1px solid #111827",
         borderRadius: 12,
+        textAlign: "center",
         background: "#fff",
         color: "#111827",
         fontWeight: 700,
         cursor: "pointer",
     },
+
 };
