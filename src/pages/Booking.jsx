@@ -1,26 +1,139 @@
 import BottomNav from "../components/BottomNav";
 import { Link } from "react-router-dom";
+
 const bookings = [
     {
         id: "BK-001",
+        orderNumber: "KNC-20260905-001",
         equipment: "Sony A7 III",
         date: "05 Sep 2026 - 07 Sep 2026",
         duration: 3,
-        total: 1050000,
-        status: "Menunggu Pembayaran",
+        total: 1100000,
+        paymentStatus: "UNPAID",
+        rentalStatus: "PENDING_PAYMENT",
     },
     {
         id: "BK-002",
+        orderNumber: "KNC-20260901-002",
         equipment: "Sigma 24-70mm F2.8",
-        date: "28 Agu 2026 - 29 Agu 2026",
+        date: "01 Sep 2026 - 02 Sep 2026",
         duration: 2,
         total: 500000,
-        status: "Selesai",
+        paymentStatus: "DP_PAID",
+        rentalStatus: "WAITING_CONFIRMATION",
+    },
+    {
+        id: "BK-003",
+        orderNumber: "KNC-20260828-003",
+        equipment: "Sony FX3",
+        date: "28 Agu 2026 - 30 Agu 2026",
+        duration: 3,
+        total: 2250000,
+        paymentStatus: "PAID",
+        rentalStatus: "READY_FOR_PICKUP",
+    },
+    {
+        id: "BK-004",
+        orderNumber: "KNC-20260820-004",
+        equipment: "Godox SL60W",
+        date: "20 Agu 2026 - 21 Agu 2026",
+        duration: 2,
+        total: 240000,
+        paymentStatus: "PAID",
+        rentalStatus: "COMPLETED",
     },
 ];
 
-export default function Booking() {
+const getRentalStatus = (status) => {
+    switch (status) {
+        case "PENDING_PAYMENT":
+            return {
+                label: "Menunggu Pembayaran",
+                color: "#b91c1c",
+                background: "#fef2f2",
+            };
 
+        case "WAITING_CONFIRMATION":
+            return {
+                label: "Menunggu Konfirmasi",
+                color: "#c2410c",
+                background: "#fff7ed",
+            };
+
+        case "CONFIRMED":
+            return {
+                label: "Dikonfirmasi",
+                color: "#1d4ed8",
+                background: "#eff6ff",
+            };
+
+        case "READY_FOR_PICKUP":
+            return {
+                label: "Siap Diambil",
+                color: "#0369a1",
+                background: "#f0f9ff",
+            };
+
+        case "RENTED":
+            return {
+                label: "Sedang Disewa",
+                color: "#7c3aed",
+                background: "#f5f3ff",
+            };
+
+        case "OVERDUE":
+            return {
+                label: "Terlambat",
+                color: "#b91c1c",
+                background: "#fef2f2",
+            };
+
+        case "COMPLETED":
+            return {
+                label: "Selesai",
+                color: "#15803d",
+                background: "#f0fdf4",
+            };
+
+        case "CANCELLED":
+            return {
+                label: "Dibatalkan",
+                color: "#6b7280",
+                background: "#f3f4f6",
+            };
+
+        default:
+            return {
+                label: status,
+                color: "#6b7280",
+                background: "#f3f4f6",
+            };
+    }
+};
+
+const getPaymentStatus = (status) => {
+    switch (status) {
+        case "DP_PAID":
+            return {
+                label: "DP 50% Dibayar",
+                color: "#c2410c",
+            };
+
+        case "PAID":
+            return {
+                label: "Lunas",
+                color: "#15803d",
+            };
+
+        default:
+            return {
+                label: "Belum Dibayar",
+                color: "#b91c1c",
+            };
+    }
+};
+
+export default function Booking() {
     const handleCancel = (bookingId) => {
         const confirmCancel = window.confirm(
             "Apakah Anda yakin ingin membatalkan pesanan ini?"
@@ -30,6 +143,10 @@ export default function Booking() {
             alert(`Pesanan ${bookingId} dibatalkan`);
         }
     };
+
+    const rupiah = (value) =>
+        `Rp${Number(value).toLocaleString("id-ID")}`;
+
     return (
         <div style={styles.page}>
             <header style={styles.header}>
@@ -40,64 +157,96 @@ export default function Booking() {
                     </div>
 
                     <span style={styles.headerCount}>
-                        {bookings.length} Item
+                        {bookings.length} Booking
                     </span>
                 </div>
             </header>
 
             <main style={styles.content}>
-
-
                 <div style={styles.list}>
-                    {bookings.map((booking) => (
-                        <div key={booking.id} style={styles.card}>
-                            <div style={styles.cardTop}>
-                                <div>
-                                    <small style={styles.bookingId}>{booking.id}</small>
-                                    <h3 style={styles.equipment}>{booking.equipment}</h3>
+                    {bookings.map((booking) => {
+                        const rentalStatus = getRentalStatus(
+                            booking.rentalStatus
+                        );
+
+                        const paymentStatus = getPaymentStatus(
+                            booking.paymentStatus
+                        );
+
+                        return (
+                            <div key={booking.id} style={styles.card}>
+                                <div style={styles.cardTop}>
+                                    <div>
+                                        <small style={styles.orderNumber}>
+                                            {booking.orderNumber}
+                                        </small>
+
+                                        <h3 style={styles.equipmentName}>
+                                            {booking.equipment}
+                                        </h3>
+                                    </div>
+
+                                    <span
+                                        style={{
+                                            ...styles.statusBadge,
+                                            color: rentalStatus.color,
+                                            background: rentalStatus.background,
+                                        }}
+                                    >
+                                        {rentalStatus.label}
+                                    </span>
                                 </div>
 
-                                <span
-                                    style={{
-                                        ...styles.status,
-                                        ...(booking.status === "Selesai"
-                                            ? styles.completed
-                                            : styles.pending),
-                                    }}
-                                >
-                                    {booking.status}
-                                </span>
-                            </div>
+                                <div style={styles.bookingInfo}>
+                                    <div style={styles.infoRow}>
+                                        <span style={styles.infoLabel}>
+                                            Periode Rental
+                                        </span>
 
-                            <div style={styles.infoRow}>
-                                <span style={styles.label}>Tanggal Rental</span>
-                                <strong style={styles.value}>{booking.date}</strong>
-                            </div>
+                                        <strong style={styles.infoValue}>
+                                            {booking.date}
+                                        </strong>
+                                    </div>
 
-                            <div style={styles.infoRow}>
-                                <span style={styles.label}>Durasi</span>
-                                <strong style={styles.value}>
-                                    {booking.duration} Hari
-                                </strong>
-                            </div>
+                                    <div style={styles.infoRow}>
+                                        <span style={styles.infoLabel}>
+                                            Durasi
+                                        </span>
 
-                            <div style={styles.divider} />
+                                        <strong style={styles.infoValue}>
+                                            {booking.duration} Hari
+                                        </strong>
+                                    </div>
 
-                            <div style={styles.totalRow}>
-                                <span style={styles.totalLabel}>Total</span>
+                                    <div style={styles.infoRow}>
+                                        <span style={styles.infoLabel}>
+                                            Total
+                                        </span>
 
-                                <strong style={styles.total}>
-                                    Rp{booking.total.toLocaleString("id-ID")}
-                                </strong>
-                            </div>
+                                        <strong style={styles.infoValue}>
+                                            {rupiah(booking.total)}
+                                        </strong>
+                                    </div>
+                                </div>
 
-                            {/* {booking.status !== "Selesai" && ( */}
-                            <div style={styles.actions}>
+                                <div style={styles.paymentInfo}>
+                                    <span>Pembayaran</span>
+
+                                    <strong
+                                        style={{
+                                            color: paymentStatus.color,
+                                        }}
+                                    >
+                                        {paymentStatus.label}
+                                    </strong>
+                                </div>
+
                                 <div
                                     style={{
                                         ...styles.actions,
                                         gridTemplateColumns:
-                                            booking.status === "Menunggu Pembayaran"
+                                            booking.rentalStatus ===
+                                                "PENDING_PAYMENT"
                                                 ? "1fr 1fr"
                                                 : "1fr",
                                     }}
@@ -109,20 +258,22 @@ export default function Booking() {
                                         Lihat Detail
                                     </Link>
 
-                                    {booking.status === "Menunggu Pembayaran" && (
-                                        <button
-                                            type="button"
-                                            style={styles.cancelButton}
-                                            onClick={() => handleCancel(booking.id)}
-                                        >
-                                            Batalkan
-                                        </button>
-                                    )}
+                                    {booking.rentalStatus ===
+                                        "PENDING_PAYMENT" && (
+                                            <button
+                                                type="button"
+                                                style={styles.cancelButton}
+                                                onClick={() =>
+                                                    handleCancel(booking.id)
+                                                }
+                                            >
+                                                Batalkan
+                                            </button>
+                                        )}
                                 </div>
                             </div>
-                            {/* )} */}
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </main>
 
@@ -148,16 +299,17 @@ const styles = {
         WebkitBackdropFilter: "blur(10px)",
         borderBottom: "1px solid #f1f1f1",
     },
+
     headerInner: {
         width: "100%",
         maxWidth: 900,
         margin: "0 auto",
         padding: "14px 16px",
-
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
     },
+
     headerCount: {
         padding: "7px 10px",
         borderRadius: 999,
@@ -166,6 +318,7 @@ const styles = {
         fontSize: 11,
         fontWeight: 700,
     },
+
     small: {
         fontSize: 10,
         color: "#9ca3af",
@@ -183,23 +336,6 @@ const styles = {
         maxWidth: 900,
         margin: "0 auto",
         padding: "14px 16px",
-    },
-
-    sectionHeader: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 14,
-    },
-
-    sectionTitle: {
-        margin: 0,
-        fontSize: 16,
-    },
-
-    count: {
-        fontSize: 12,
-        color: "#6b7280",
     },
 
     list: {
@@ -221,101 +357,69 @@ const styles = {
         justifyContent: "space-between",
         alignItems: "flex-start",
         gap: 12,
-        marginBottom: 18,
+        marginBottom: 16,
     },
 
-    bookingId: {
+    orderNumber: {
+        display: "block",
+        marginBottom: 5,
+        fontSize: 9,
         color: "#9ca3af",
-        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 0.5,
     },
 
-    equipment: {
-        margin: "4px 0 0",
-        fontSize: 17,
+    equipmentName: {
+        margin: 0,
+        fontSize: 16,
     },
 
-    status: {
-        padding: "7px 9px",
+    statusBadge: {
+        padding: "6px 9px",
         borderRadius: 999,
-        fontSize: 10,
+        fontSize: 9,
         fontWeight: 700,
         whiteSpace: "nowrap",
     },
 
-    pending: {
-        background: "#fff7ed",
-        color: "#c2410c",
-    },
-
-    completed: {
-        background: "#ecfdf5",
-        color: "#047857",
+    bookingInfo: {
+        padding: "12px 0",
+        borderTop: "1px solid #f3f4f6",
+        borderBottom: "1px solid #f3f4f6",
     },
 
     infoRow: {
         display: "flex",
         justifyContent: "space-between",
+        alignItems: "flex-start",
         gap: 20,
-        marginBottom: 10,
+        padding: "5px 0",
     },
 
-    label: {
-        fontSize: 12,
+    infoLabel: {
+        fontSize: 11,
         color: "#6b7280",
     },
 
-    value: {
-        fontSize: 12,
+    infoValue: {
+        fontSize: 11,
         textAlign: "right",
     },
 
-    divider: {
-        height: 1,
-        background: "#eeeeee",
-        margin: "14px 0",
-    },
-
-    totalRow: {
+    paymentInfo: {
+        marginTop: 12,
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-    },
-
-    totalLabel: {
-        fontSize: 13,
+        gap: 15,
+        fontSize: 10,
         color: "#6b7280",
     },
 
-    total: {
-        fontSize: 18,
-    },
-
-    button: {
-        width: "100%",
-        marginTop: 16,
-        padding: 12,
-        border: 0,
-        borderRadius: 12,
-        background: "#111827",
-        color: "#fff",
-        fontWeight: 700,
-        cursor: "pointer",
-    },
     actions: {
         display: "grid",
         gap: 10,
         marginTop: 16,
-    },
-
-    button: {
-        flex: 1,
-        padding: 12,
-        border: 0,
-        borderRadius: 12,
-        background: "#111827",
-        color: "#fff",
-        fontWeight: 700,
-        cursor: "pointer",
     },
 
     buttonLink: {
@@ -352,17 +456,4 @@ const styles = {
         justifyContent: "center",
         boxSizing: "border-box",
     },
-
-    invoiceButton: {
-        flex: 1,
-        padding: 12,
-        border: "1px solid #111827",
-        borderRadius: 12,
-        textAlign: "center",
-        background: "#fff",
-        color: "#111827",
-        fontWeight: 700,
-        cursor: "pointer",
-    },
-
 };

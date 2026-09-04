@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { FiArrowLeft } from "react-icons/fi";
 
@@ -6,9 +6,9 @@ export default function EquipmentDetail() {
     const { id } = useParams();
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-
     const pricePerDay = 350000;
     const [activeImage, setActiveImage] = useState(0);
+    const navigate = useNavigate();
 
     const equipmentImages = [
         "/images/sony-a7iii-1.jpg",
@@ -226,15 +226,20 @@ export default function EquipmentDetail() {
                         cursor: duration > 0 ? "pointer" : "not-allowed",
                     }}
                     disabled={duration === 0}
-                    onClick={() => {
-                        console.log({
-                            equipmentId: id,
-                            startDate,
-                            endDate,
-                            duration,
-                            total,
-                        });
-                    }}
+                    onClick={() =>
+                        navigate("/checkout", {
+                            state: {
+                                equipmentId: id,
+                                equipmentName: "Sony A7 III",
+                                equipmentCode: "CAM-SNY-A73-001",
+                                pricePerDay,
+                                startDate,
+                                endDate,
+                                duration,
+                                total,
+                            },
+                        })
+                    }
                 >
                     Lanjut Checkout
                 </button>

@@ -8,6 +8,8 @@ import Booking from "./pages/Booking";
 import Profile from "./pages/Profil";
 import BookingDetail from "./pages/BookingDetail";
 import Invoice from "./pages/Invoice";
+import Checkout from "./pages/Checkout";
+import Payment from "./pages/Payment";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/booking/:id" element={<BookingDetail />} />
         <Route path="/invoice/:id" element={<Invoice />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment/:id" element={<Payment />} />
       </Routes>
     </BrowserRouter>
   );

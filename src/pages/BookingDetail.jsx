@@ -13,9 +13,7 @@ export default function BookingDetail() {
     // sementara dummy, nanti ambil dari API berdasarkan ID
     const booking = {
         id: id,
-
         orderNumber: "KNC-20260905-001",
-        bookingDate: "03 September 2026, 16:30",
 
         equipment: "Sony A7 III",
         equipmentCode: "CAM-SNY-A73-001",
@@ -26,10 +24,18 @@ export default function BookingDetail() {
         duration: 3,
 
         pricePerDay: 350000,
-        total: 1050000,
 
-        paymentStatus: "Belum Dibayar",
-        rentalStatus: "Menunggu Pembayaran",
+        subtotal: 1050000,
+        deliveryFee: 50000,
+        total: 1100000,
+
+        paymentType: "DP",
+        paymentStatus: "DP_PAID",
+
+        paidAmount: 550000,
+        remainingAmount: 550000,
+
+        rentalStatus: "Menunggu Konfirmasi",
 
         accessories: [
             "Sony A7 III Body",
@@ -41,6 +47,36 @@ export default function BookingDetail() {
             "Camera Bag",
         ],
     };
+
+    const getPaymentStatus = () => {
+        switch (booking.paymentStatus) {
+            case "DP_PAID":
+                return {
+                    label: "DP 50% Dibayar",
+                    color: "#c2410c",
+                    background: "#fff7ed",
+                };
+
+            case "PAID":
+                return {
+                    label: "Lunas",
+                    color: "#15803d",
+                    background: "#f0fdf4",
+                };
+
+            default:
+                return {
+                    label: "Belum Dibayar",
+                    color: "#b91c1c",
+                    background: "#fef2f2",
+                };
+        }
+    };
+
+    const paymentStatus = getPaymentStatus();
+
+    const rupiah = (value) =>
+        `Rp${Number(value).toLocaleString("id-ID")}`;
 
     return (
         <div style={styles.page}>
@@ -154,31 +190,66 @@ export default function BookingDetail() {
                     <small style={styles.cardLabel}>PEMBAYARAN</small>
 
                     <div style={styles.row}>
-                        <span>Harga / hari</span>
+                        <span>Metode Pembayaran</span>
                         <strong>
-                            Rp{booking.pricePerDay.toLocaleString("id-ID")}
+                            {booking.paymentType === "DP"
+                                ? "DP 50%"
+                                : "Bayar Lunas"}
                         </strong>
                     </div>
 
                     <div style={styles.row}>
-                        <span>Durasi</span>
-                        <strong>{booking.duration} Hari</strong>
+                        <span>Status Pembayaran</span>
+
+                        <span
+                            style={{
+                                ...styles.paymentBadge,
+                                color: paymentStatus.color,
+                                background: paymentStatus.background,
+                            }}
+                        >
+                            {paymentStatus.label}
+                        </span>
                     </div>
 
                     <div style={styles.divider} />
 
-                    <div style={styles.totalRow}>
-                        <span>Total Pembayaran</span>
+                    <div style={styles.row}>
+                        <span>Subtotal Rental</span>
+                        <strong>{rupiah(booking.subtotal)}</strong>
+                    </div>
 
-                        <strong style={styles.total}>
-                            Rp{booking.total.toLocaleString("id-ID")}
+                    <div style={styles.row}>
+                        <span>Biaya Delivery</span>
+                        <strong>
+                            {booking.deliveryFee === 0
+                                ? "Gratis"
+                                : rupiah(booking.deliveryFee)}
                         </strong>
                     </div>
 
-                    <div style={styles.paymentStatus}>
-                        <span>Status Pembayaran</span>
-                        <strong>{booking.paymentStatus}</strong>
+                    <div style={styles.row}>
+                        <span>Total Pesanan</span>
+                        <strong>{rupiah(booking.total)}</strong>
                     </div>
+
+                    <div style={styles.divider} />
+
+                    <div style={styles.row}>
+                        <span>Sudah Dibayar</span>
+                        <strong style={{ color: "#15803d" }}>
+                            {rupiah(booking.paidAmount)}
+                        </strong>
+                    </div>
+
+                    {booking.remainingAmount > 0 && (
+                        <div style={styles.row}>
+                            <span>Sisa Pembayaran</span>
+                            <strong style={{ color: "#c2410c" }}>
+                                {rupiah(booking.remainingAmount)}
+                            </strong>
+                        </div>
+                    )}
                 </div>
 
                 {/* BOOKING ID */}
@@ -193,13 +264,46 @@ export default function BookingDetail() {
                         to={`/invoice/${booking.id}`}
                         style={styles.invoiceButton}
                     >
+                        <FiFileText size={17} />
                         Lihat Invoice
                     </Link>
-                    {booking.paymentStatus === "Belum Dibayar" && (
-                        <button style={styles.payButton}>
-                            <FiCheckCircle size={17} />
-                            Lanjut Pembayaran
-                        </button>
+
+                    {booking.paymentStatus === "UNPAID" && (
+                        <Link
+                            to={`/payment/${booking.orderNumber}`}
+                            state={{
+                                orderNumber: booking.orderNumber,
+                                paymentType: booking.paymentType,
+                                grandTotal: booking.total,
+                                paymentAmount:
+                                    booking.paymentType === "DP"
+                                        ? booking.total * 0.5
+                                        : booking.total,
+                                remainingAmount:
+                                    booking.paymentType === "DP"
+                                        ? booking.total * 0.5
+                                        : 0,
+                            }}
+                            style={styles.payButton}
+                        >
+                            Bayar Sekarang
+                        </Link>
+                    )}
+
+                    {booking.paymentStatus === "DP_PAID" && (
+                        <Link
+                            to={`/payment/${booking.orderNumber}`}
+                            state={{
+                                orderNumber: booking.orderNumber,
+                                paymentType: "REMAINING",
+                                grandTotal: booking.total,
+                                paymentAmount: booking.remainingAmount,
+                                remainingAmount: 0,
+                            }}
+                            style={styles.payButton}
+                        >
+                            Lunasi Sisa • {rupiah(booking.remainingAmount)}
+                        </Link>
                     )}
                 </div>
             </main>
@@ -213,7 +317,13 @@ const styles = {
         background: "#f7f7f8",
         paddingBottom: 30,
     },
-
+    paymentBadge: {
+        padding: "5px 9px",
+        borderRadius: 999,
+        fontSize: 10,
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+    },
     header: {
         position: "sticky",
         top: 0,
