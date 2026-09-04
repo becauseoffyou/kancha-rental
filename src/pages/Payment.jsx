@@ -18,10 +18,33 @@ export default function Payment() {
         paymentAmount: 550000,
         remainingAmount: 550000,
     };
-
+    const [selectedBank, setSelectedBank] = useState("BCA");
     const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
     const [timeLeft, setTimeLeft] = useState(30 * 60);
+    const bankAccounts = {
+        BCA: {
+            bank: "BCA",
+            accountNumber: "1234567890",
+            accountName: "PT KANCHA CREATIVE",
+        },
+        MANDIRI: {
+            bank: "Mandiri",
+            accountNumber: "9876543210",
+            accountName: "PT KANCHA CREATIVE",
+        },
+        BRI: {
+            bank: "BRI",
+            accountNumber: "1122334455",
+            accountName: "PT KANCHA CREATIVE",
+        },
+        BNI: {
+            bank: "BNI",
+            accountNumber: "5566778899",
+            accountName: "PT KANCHA CREATIVE",
+        },
+    };
 
+    const activeBank = bankAccounts[selectedBank];
     useEffect(() => {
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
@@ -52,6 +75,12 @@ export default function Payment() {
     const copyAccount = () => {
         navigator.clipboard.writeText("1234567890");
         alert("Nomor rekening berhasil disalin");
+    };
+
+    const handleConfirmPayment = () => {
+        alert(
+            "Pembayaran berhasil dikonfirmasi. Mohon tunggu proses verifikasi."
+        );
     };
 
     return (
@@ -143,7 +172,74 @@ export default function Payment() {
                             onClick={() => setPaymentMethod("TRANSFER")}
                             style={{
                                 ...styles.methodButton,
-                                ...(paymentMethod === "TRANSFER"
+                                ...(paymentMethod === "TRANSFER" && (
+                                    <div style={styles.card}>
+                                        <small style={styles.cardLabel}>
+                                            PILIH BANK TUJUAN
+                                        </small>
+
+                                        <div style={styles.bankGrid}>
+                                            {Object.keys(bankAccounts).map((bankKey) => (
+                                                <button
+                                                    key={bankKey}
+                                                    type="button"
+                                                    onClick={() => setSelectedBank(bankKey)}
+                                                    style={{
+                                                        ...styles.bankOption,
+                                                        ...(selectedBank === bankKey
+                                                            ? styles.bankOptionActive
+                                                            : {}),
+                                                    }}
+                                                >
+                                                    {bankAccounts[bankKey].bank}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div style={styles.divider} />
+
+                                        <small style={styles.cardLabel}>
+                                            INFORMASI REKENING
+                                        </small>
+
+                                        <div style={styles.bankBox}>
+                                            <div>
+                                                <small style={styles.bankName}>
+                                                    BANK {activeBank.bank.toUpperCase()}
+                                                </small>
+
+                                                <strong style={styles.accountNumber}>
+                                                    {activeBank.accountNumber}
+                                                </strong>
+
+                                                <span style={styles.accountName}>
+                                                    {activeBank.accountName}
+                                                </span>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(
+                                                        activeBank.accountNumber
+                                                    );
+
+                                                    alert(
+                                                        `Nomor rekening ${activeBank.bank} berhasil disalin`
+                                                    );
+                                                }}
+                                                style={styles.copyButton}
+                                            >
+                                                <FiCopy size={16} />
+                                            </button>
+                                        </div>
+
+                                        <div style={styles.transferNote}>
+                                            Transfer sesuai nominal pembayaran ke rekening
+                                            KANCHA di atas.
+                                        </div>
+                                    </div>
+                                )
                                     ? styles.methodActive
                                     : {}),
                             }}
@@ -168,30 +264,63 @@ export default function Payment() {
                     </div>
                 </div>
 
+
                 {paymentMethod === "TRANSFER" && (
                     <div style={styles.card}>
                         <small style={styles.cardLabel}>
-                            TRANSFER BANK
+                            PILIH BANK TUJUAN
+                        </small>
+
+                        <div style={styles.bankGrid}>
+                            {Object.keys(bankAccounts).map((bankKey) => (
+                                <button
+                                    key={bankKey}
+                                    type="button"
+                                    onClick={() => setSelectedBank(bankKey)}
+                                    style={{
+                                        ...styles.bankOption,
+                                        ...(selectedBank === bankKey
+                                            ? styles.bankOptionActive
+                                            : {}),
+                                    }}
+                                >
+                                    {bankAccounts[bankKey].bank}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div style={styles.divider} />
+
+                        <small style={styles.cardLabel}>
+                            INFORMASI REKENING
                         </small>
 
                         <div style={styles.bankBox}>
                             <div>
                                 <small style={styles.bankName}>
-                                    BANK BCA
+                                    BANK {activeBank.bank.toUpperCase()}
                                 </small>
 
                                 <strong style={styles.accountNumber}>
-                                    1234567890
+                                    {activeBank.accountNumber}
                                 </strong>
 
                                 <span style={styles.accountName}>
-                                    PT KANCHA CREATIVE
+                                    {activeBank.accountName}
                                 </span>
                             </div>
 
                             <button
                                 type="button"
-                                onClick={copyAccount}
+                                onClick={() => {
+                                    navigator.clipboard.writeText(
+                                        activeBank.accountNumber
+                                    );
+
+                                    alert(
+                                        `Nomor rekening ${activeBank.bank} berhasil disalin`
+                                    );
+                                }}
                                 style={styles.copyButton}
                             >
                                 <FiCopy size={16} />
@@ -199,8 +328,8 @@ export default function Payment() {
                         </div>
 
                         <div style={styles.transferNote}>
-                            Pastikan nominal transfer sesuai agar pembayaran
-                            lebih mudah diverifikasi.
+                            Transfer sesuai nominal pembayaran ke rekening
+                            KANCHA di atas.
                         </div>
                     </div>
                 )}
@@ -237,12 +366,13 @@ export default function Payment() {
                     </div>
                 </div>
 
-                <Link
-                    to={`/booking/${paymentData.orderNumber}`}
+                <button
+                    type="button"
                     style={styles.bookingButton}
+                    onClick={handleConfirmPayment}
                 >
-                    Lihat Detail Booking
-                </Link>
+                    Konfirmasi Pembayaran
+                </button>
             </main>
         </div>
     );
@@ -272,7 +402,34 @@ const styles = {
         alignItems: "center",
         gap: 12,
     },
+    bankGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: 8,
+    },
 
+    bankOption: {
+        minHeight: 42,
+        border: "1px solid #e5e7eb",
+        borderRadius: 10,
+        background: "#fff",
+        color: "#6b7280",
+        fontSize: 11,
+        fontWeight: 700,
+        cursor: "pointer",
+    },
+
+    bankOptionActive: {
+        border: "2px solid #111827",
+        background: "#111827",
+        color: "#fff",
+    },
+
+    divider: {
+        height: 1,
+        background: "#eeeeee",
+        margin: "16px 0",
+    },
     backButton: {
         width: 38,
         height: 38,
@@ -501,6 +658,7 @@ const styles = {
     bookingButton: {
         width: "100%",
         height: 48,
+        border: 0,
         borderRadius: 13,
         background: "#111827",
         color: "#fff",
@@ -509,6 +667,7 @@ const styles = {
         justifyContent: "center",
         fontSize: 13,
         fontWeight: 700,
-        textDecoration: "none",
+        fontFamily: "inherit",
+        cursor: "pointer",
     },
 };
