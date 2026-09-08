@@ -1,37 +1,34 @@
 import { Link } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
-const equipment = [
-    {
-        id: 1,
-        name: "Sony A7 III",
-        category: "Camera",
-        price: 350000,
-        status: "Tersedia",
-    },
-    {
-        id: 2,
-        name: "Sony FX3",
-        category: "Cinema Camera",
-        price: 750000,
-        status: "Tersedia",
-    },
-    {
-        id: 3,
-        name: "Sigma 24-70mm F2.8",
-        category: "Lens",
-        price: 250000,
-        status: "Tersedia",
-    },
-    {
-        id: 4,
-        name: "Godox SL60W",
-        category: "Lighting",
-        price: 120000,
-        status: "Tersedia",
-    },
-];
+import { useEffect, useState } from "react";
+import equipmentService from "../services/equipmentService";
+
+
 
 export default function Equipment() {
+
+    const [equipment, setEquipment] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        loadEquipment();
+    }, []);
+
+    const loadEquipment = async () => {
+        try {
+            setLoading(true);
+
+            const data = await equipmentService.getAll();
+
+            setEquipment(data);
+        } catch (error) {
+            console.error(error);
+            setError("Gagal memuat equipment");
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div style={styles.page}>
             <header style={styles.header}>
@@ -62,28 +59,40 @@ export default function Equipment() {
 
 
                 <div style={styles.grid}>
-                    {equipment.map((item) => (
-                        <Link
-                            to={`/equipment/${item.id}`}
-                            key={item.id}
-                            style={styles.card}
-                        >
-                            <div style={styles.image}>📷</div>
 
-                            <div style={styles.cardBody}>
-                                <small style={styles.category}>{item.category}</small>
+                    {loading && <p>Memuat equipment...</p>}
 
-                                <h3 style={styles.name}>{item.name}</h3>
+                    {error && <p>{error}</p>}
 
-                                <span style={styles.status}>● {item.status}</span>
+                    {!loading &&
+                        !error &&
+                        equipment.map((item) => (
+                            <Link
+                                to={`/equipment/${item.id}`}
+                                key={item.id}
+                                style={styles.card}
+                            >
+                                <div style={styles.image}><img
+                                    src={item.image_url}
+                                    alt={item.name}
+                                /></div>
 
-                                <p style={styles.price}>
-                                    Rp{item.price.toLocaleString("id-ID")}
-                                    <span style={styles.day}> / hari</span>
-                                </p>
-                            </div>
-                        </Link>
-                    ))}
+                                <div style={styles.cardBody}>
+                                    <small style={styles.category}>{item.category}</small>
+
+                                    <h3 style={styles.name}>{item.name}</h3>
+
+                                    <span style={styles.status}>● {Number(item.available_units) > 0
+                                        ? "Tersedia"
+                                        : "Tidak Tersedia"}</span>
+
+                                    <p style={styles.price}>
+                                        Rp{Number(item.price_per_day).toLocaleString("id-ID")}
+                                        <span style={styles.day}> / hari</span>
+                                    </p>
+                                </div>
+                            </Link>
+                        ))}
                 </div>
             </div>
             <BottomNav />

@@ -6,6 +6,7 @@ import {
     FiShield,
 } from "react-icons/fi";
 import { useState } from "react";
+import bookingService from "../services/bookingService";
 
 export default function Checkout() {
     const location = useLocation();
@@ -18,7 +19,8 @@ export default function Checkout() {
         phone: "08xxxxxxxxxx",
         verificationStatus: "Belum Terverifikasi",
     };
-
+    const [submitting, setSubmitting] = useState(false);
+    const [bookingError, setBookingError] = useState("");
 
     // Kalau checkout dibuka langsung tanpa pilih equipment
     if (!rental) {
@@ -81,48 +83,70 @@ export default function Checkout() {
             ? grandTotal - paymentAmount
             : 0;
 
-    const handleBooking = () => {
-        const orderNumber = `KNC-${Date.now()}`;
+    const handleBooking = async () => {
+        if (
+            pickupMethod === "DELIVERY" &&
+            !address.trim()
+        ) {
+            alert("Alamat delivery wajib diisi.");
+            return;
+        }
 
-        const bookingData = {
-            ...rental,
+        try {
+            setSubmitting(true);
+            setBookingError("");
 
-            orderNumber,
+            const data =
+                await bookingService.createBooking({
+                    user_id: 1, // sementara demo user
 
-            customer: {
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-            },
+                    equipment_id:
+                        rental.equipmentId,
 
-            pickupMethod,
+                    start_date:
+                        rental.startDate,
 
-            deliveryAddress:
-                pickupMethod === "DELIVERY"
-                    ? address
-                    : null,
+                    end_date:
+                        rental.endDate,
 
-            deliveryFee,
-            notes,
+                    pickup_method:
+                        pickupMethod,
 
-            subtotal: total,
-            grandTotal,
+                    delivery_address:
+                        pickupMethod === "DELIVERY"
+                            ? address
+                            : null,
 
-            paymentType,
+                    notes,
 
-            paymentPercentage:
-                paymentType === "DP" ? 50 : 100,
+                    payment_type:
+                        paymentType,
+                });
 
-            paymentAmount,
-            remainingAmount,
-        };
+            console.log(
+                "BOOKING DARI BACKEND:",
+                data
+            );
 
-        console.log("Booking:", bookingData);
+            navigate(
+                `/payment/${data.booking.order_number}`
+            );
 
-        navigate(`/payment/${orderNumber}`, {
-            state: bookingData,
-        });
+        } catch (error) {
+            console.error(
+                "Create booking error:",
+                error
+            );
+
+            setBookingError(
+                error.message ||
+                "Gagal membuat pesanan"
+            );
+        } finally {
+            setSubmitting(false);
+        }
     };
+
     return (
         <div style={styles.page}>
             {/* HEADER */}
@@ -414,23 +438,19 @@ export default function Checkout() {
 
                 <button
                     type="button"
-                    style={{
-                        ...styles.checkoutButton,
-                        opacity:
-                            pickupMethod === "DELIVERY" && !address.trim()
-                                ? 0.5
-                                : 1,
-                        cursor:
-                            pickupMethod === "DELIVERY" && !address.trim()
-                                ? "not-allowed"
-                                : "pointer",
-                    }}
-                    disabled={
-                        pickupMethod === "DELIVERY" && !address.trim()
-                    }
                     onClick={handleBooking}
+                    disabled={submitting}
+                    style={{
+                        ...styles.bookingButton,
+                        opacity: submitting ? 0.6 : 1,
+                        cursor: submitting
+                            ? "not-allowed"
+                            : "pointer",
+                    }}
                 >
-                    Buat Pesanan • {rupiah(paymentAmount)}
+                    {submitting
+                        ? "Membuat Pesanan..."
+                        : "Buat Pesanan"}
                 </button>
             </main>
         </div>
@@ -448,7 +468,22 @@ const styles = {
         alignItems: "center",
         gap: 12,
     },
-
+    bookingButton: {
+        width: "100%",
+        height: 52,
+        border: "none",
+        borderRadius: 14,
+        background: "#111827",
+        color: "#ffffff",
+        fontSize: 14,
+        fontWeight: 700,
+        fontFamily: "inherit",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 6px 18px rgba(17, 24, 39, 0.12)",
+    },
     avatar: {
         width: 44,
         height: 44,
