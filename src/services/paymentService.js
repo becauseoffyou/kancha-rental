@@ -1,5 +1,5 @@
 const API_URL =
-    "http://localhost:5000/api";
+    "http://kancha-rental-api-production.up.railway.app/api";
 
 const uploadProof = async (
     paymentReference,
