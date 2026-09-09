@@ -10,6 +10,7 @@ import BookingDetail from "./pages/BookingDetail";
 import Invoice from "./pages/Invoice";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
+import Verification from "./pages/Verification";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/invoice/:id" element={<Invoice />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment/:id" element={<Payment />} />
+        <Route path="/verification" element={<Verification />} />
       </Routes>
     </BrowserRouter>
   );
