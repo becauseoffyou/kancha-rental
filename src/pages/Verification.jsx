@@ -116,26 +116,40 @@ export default function Verification() {
     };
 
     const handleKtpChange = (e) => {
-        const file =
-            e.target.files?.[0];
+        const file = e.target.files?.[0];
 
         if (!file) return;
 
-        setKtp(file);
+        if (file.size > 5 * 1024 * 1024) {
+            setError(
+                "Ukuran foto KTP maksimal 5 MB."
+            );
+            e.target.value = "";
+            return;
+        }
 
+        setError("");
+        setKtp(file);
         setKtpPreview(
             URL.createObjectURL(file)
         );
     };
 
     const handleSelfieChange = (e) => {
-        const file =
-            e.target.files?.[0];
+        const file = e.target.files?.[0];
 
         if (!file) return;
 
-        setSelfie(file);
+        if (file.size > 5 * 1024 * 1024) {
+            setError(
+                "Ukuran foto selfie maksimal 5 MB."
+            );
+            e.target.value = "";
+            return;
+        }
 
+        setError("");
+        setSelfie(file);
         setSelfiePreview(
             URL.createObjectURL(file)
         );
