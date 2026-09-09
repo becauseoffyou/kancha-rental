@@ -11,6 +11,7 @@ import Invoice from "./pages/Invoice";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import Verification from "./pages/Verification";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -22,12 +23,27 @@ function App() {
         <Route path="/booking" element={<Booking />} />
         <Route path="/equipment" element={<Equipment />} />
         <Route path="/equipment/:id" element={<EquipmentDetail />} />
-        <Route path="/profile" element={<Profile />} />
         <Route path="/booking/:id" element={<BookingDetail />} />
         <Route path="/invoice/:id" element={<Invoice />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment/:id" element={<Payment />} />
-        <Route path="/verification" element={<Verification />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/verification"
+          element={
+            <ProtectedRoute>
+              <Verification />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
