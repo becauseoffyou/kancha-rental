@@ -1,21 +1,145 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import BottomNav from "../components/BottomNav";
-import { FiUser, FiShield, FiFileText, FiLogOut, FiChevronRight } from "react-icons/fi";
+
+import {
+    FiUser,
+    FiShield,
+    FiFileText,
+    FiLogOut,
+    FiChevronRight,
+} from "react-icons/fi";
+
+import authService from "../services/authService";
 
 export default function Profile() {
-    const user = {
-        name: "Irhandy Ardiansyah",
-        email: "irhandy@email.com",
-        phone: "08xxxxxxxxxx",
-        verificationStatus: "Belum Terverifikasi",
+    const navigate = useNavigate();
+
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
+    const loadProfile = async () => {
+        try {
+            setLoading(true);
+
+            const token =
+                authService.getToken();
+
+            if (!token) {
+                navigate("/login");
+                return;
+            }
+
+            const currentUser =
+                await authService.getMe();
+
+            setUser(currentUser);
+
+            localStorage.setItem(
+                "kancha_user",
+                JSON.stringify(currentUser)
+            );
+        } catch (error) {
+            console.error(
+                "Load profile error:",
+                error
+            );
+
+            authService.logout();
+            navigate("/login");
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const handleLogout = () => {
+        authService.logout();
+        navigate("/login");
+    };
+
+    const getVerificationLabel = () => {
+        switch (
+        user?.verification_status
+        ) {
+            case "PENDING":
+                return "Sedang Diproses";
+
+            case "VERIFIED":
+                return "Terverifikasi";
+
+            case "REJECTED":
+                return "Verifikasi Ditolak";
+
+            default:
+                return "Belum Terverifikasi";
+        }
+    };
+
+    const getVerificationButton = () => {
+        switch (
+        user?.verification_status
+        ) {
+            case "PENDING":
+                return "Lihat Status Verifikasi";
+
+            case "VERIFIED":
+                return "Lihat Verifikasi";
+
+            case "REJECTED":
+                return "Kirim Ulang Verifikasi";
+
+            default:
+                return "Verifikasi Sekarang";
+        }
+    };
+
+    const getVerificationText = () => {
+        switch (
+        user?.verification_status
+        ) {
+            case "PENDING":
+                return "Data identitas kamu sedang diperiksa oleh admin KANCHA.";
+
+            case "VERIFIED":
+                return "Identitas kamu sudah diverifikasi dan dapat digunakan untuk rental.";
+
+            case "REJECTED":
+                return "Data verifikasi perlu diperbaiki. Lihat alasan penolakan dan kirim ulang.";
+
+            default:
+                return "Verifikasi identitas diperlukan sebelum melakukan rental.";
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={styles.loadingPage}>
+                Memuat profile...
+            </div>
+        );
+    }
+
+    if (!user) {
+        return null;
+    }
 
     return (
         <div style={styles.page}>
             <header style={styles.header}>
                 <div style={styles.headerInner}>
                     <div>
-                        <small style={styles.small}>KANCHA RENTAL</small>
-                        <h2 style={styles.title}>Profile Saya</h2>
+                        <small style={styles.small}>
+                            KANCHA RENTAL
+                        </small>
+
+                        <h2 style={styles.title}>
+                            Profile Saya
+                        </h2>
                     </div>
                 </div>
             </header>
@@ -27,27 +151,56 @@ export default function Profile() {
                     </div>
 
                     <div style={styles.profileInfo}>
-                        <h3 style={styles.name}>{user.name}</h3>
-                        <p style={styles.email}>{user.email}</p>
-                        <p style={styles.phone}>{user.phone}</p>
+                        <h3 style={styles.name}>
+                            {user.name}
+                        </h3>
+
+                        <p style={styles.email}>
+                            {user.email}
+                        </p>
+
+                        <p style={styles.phone}>
+                            {user.phone || "-"}
+                        </p>
                     </div>
                 </div>
 
                 <div style={styles.verificationCard}>
                     <div>
-                        <small style={styles.verificationLabel}>Status Verifikasi</small>
+                        <small
+                            style={
+                                styles.verificationLabel
+                            }
+                        >
+                            Status Verifikasi
+                        </small>
 
-                        <h3 style={styles.verificationStatus}>
-                            {user.verificationStatus}
+                        <h3
+                            style={
+                                styles.verificationStatus
+                            }
+                        >
+                            {getVerificationLabel()}
                         </h3>
 
-                        <p style={styles.verificationText}>
-                            Verifikasi identitas diperlukan sebelum melakukan rental.
+                        <p
+                            style={
+                                styles.verificationText
+                            }
+                        >
+                            {getVerificationText()}
                         </p>
                     </div>
 
-                    <button style={styles.verifyButton}>
-                        Verifikasi Sekarang
+                    <button
+                        style={styles.verifyButton}
+                        onClick={() =>
+                            navigate(
+                                "/verification"
+                            )
+                        }
+                    >
+                        {getVerificationButton()}
                     </button>
                 </div>
 
@@ -55,23 +208,45 @@ export default function Profile() {
                     <MenuItem
                         icon={<FiShield />}
                         title="Verifikasi Identitas"
-                        subtitle="KTP dan verifikasi wajah"
+                        subtitle={
+                            user.verification_status ===
+                                "PENDING"
+                                ? "Menunggu pemeriksaan admin"
+                                : user.verification_status ===
+                                    "VERIFIED"
+                                    ? "Identitas sudah terverifikasi"
+                                    : user.verification_status ===
+                                        "REJECTED"
+                                        ? "Verifikasi perlu dikirim ulang"
+                                        : "KTP dan verifikasi wajah"
+                        }
+                        onClick={() =>
+                            navigate(
+                                "/verification"
+                            )
+                        }
                     />
 
                     <MenuItem
                         icon={<FiFileText />}
                         title="Riwayat Booking"
                         subtitle="Lihat transaksi rental"
+                        onClick={() =>
+                            navigate("/booking")
+                        }
                     />
 
                     <MenuItem
                         icon={<FiUser />}
                         title="Data Akun"
-                        subtitle="Ubah nama, email dan nomor telepon"
+                        subtitle="Nama, email dan nomor telepon"
                     />
                 </div>
 
-                <button style={styles.logoutButton}>
+                <button
+                    style={styles.logoutButton}
+                    onClick={handleLogout}
+                >
                     <FiLogOut size={18} />
                     Keluar
                 </button>
@@ -82,19 +257,41 @@ export default function Profile() {
     );
 }
 
-function MenuItem({ icon, title, subtitle }) {
+function MenuItem({
+    icon,
+    title,
+    subtitle,
+    onClick,
+}) {
     return (
-        <button style={styles.menuItem}>
+        <button
+            style={styles.menuItem}
+            onClick={onClick}
+        >
             <div style={styles.menuIcon}>
                 {icon}
             </div>
 
             <div style={styles.menuText}>
-                <strong style={styles.menuTitle}>{title}</strong>
-                <span style={styles.menuSubtitle}>{subtitle}</span>
+                <strong
+                    style={styles.menuTitle}
+                >
+                    {title}
+                </strong>
+
+                <span
+                    style={
+                        styles.menuSubtitle
+                    }
+                >
+                    {subtitle}
+                </span>
             </div>
 
-            <FiChevronRight size={18} color="#9ca3af" />
+            <FiChevronRight
+                size={18}
+                color="#9ca3af"
+            />
         </button>
     );
 }
@@ -106,14 +303,27 @@ const styles = {
         paddingBottom: 90,
     },
 
+    loadingPage: {
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f7f7f8",
+        color: "#6b7280",
+        fontWeight: 600,
+    },
+
     header: {
         position: "sticky",
         top: 0,
         zIndex: 1000,
-        background: "rgba(255,255,255,.96)",
+        background:
+            "rgba(255,255,255,.96)",
         backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        borderBottom: "1px solid #f1f1f1",
+        WebkitBackdropFilter:
+            "blur(10px)",
+        borderBottom:
+            "1px solid #f1f1f1",
     },
 
     headerInner: {
@@ -121,6 +331,7 @@ const styles = {
         maxWidth: 900,
         margin: "0 auto",
         padding: "14px 16px",
+        boxSizing: "border-box",
     },
 
     small: {
@@ -140,6 +351,7 @@ const styles = {
         maxWidth: 900,
         margin: "0 auto",
         padding: "14px 16px",
+        boxSizing: "border-box",
     },
 
     profileCard: {
@@ -237,7 +449,8 @@ const styles = {
         gap: 12,
         padding: 16,
         border: 0,
-        borderBottom: "1px solid #f1f1f1",
+        borderBottom:
+            "1px solid #f1f1f1",
         background: "#fff",
         textAlign: "left",
         cursor: "pointer",
