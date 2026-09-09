@@ -125,7 +125,7 @@ const styles = {
         fontWeight: 700,
     },
     logo: {
-        width: 150,
+        width: 170,
         height: "auto",
         objectFit: "contain",
         display: "block",
