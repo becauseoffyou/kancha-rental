@@ -117,24 +117,26 @@ export default function Payment() {
     // TIMER
     // ==============================
     useEffect(() => {
-        const timer =
-            setInterval(() => {
-                setTimeLeft((prev) => {
-                    if (prev <= 1) {
-                        clearInterval(
-                            timer
-                        );
+        const paymentStatus =
+            bookingData?.payments?.[0]?.payment_status;
 
-                        return 0;
-                    }
+        if (paymentStatus !== "PENDING") {
+            return;
+        }
 
-                    return prev - 1;
-                });
-            }, 1000);
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
 
-        return () =>
-            clearInterval(timer);
-    }, []);
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [bookingData]);
     const handleProofChange = (
         event
     ) => {
@@ -562,47 +564,32 @@ export default function Payment() {
                 }
             >
                 {/* TIMER */}
-                <div
-                    style={{
-                        ...styles.timerCard,
-
-                        ...(isExpired
-                            ? styles.timerExpired
-                            : {}),
-                    }}
-                >
+                {paymentStatus === "PENDING" && (
                     <div
-                        style={
-                            styles.timerIcon
-                        }
+                        style={{
+                            ...styles.timerCard,
+                            ...(isExpired
+                                ? styles.timerExpired
+                                : {}),
+                        }}
                     >
-                        <FiClock
-                            size={20}
-                        />
-                    </div>
+                        <div style={styles.timerIcon}>
+                            <FiClock size={20} />
+                        </div>
 
-                    <div>
-                        <small
-                            style={
-                                styles.timerLabel
-                            }
-                        >
-                            {isExpired
-                                ? "Waktu pembayaran telah habis"
-                                : "Selesaikan pembayaran dalam"}
-                        </small>
+                        <div>
+                            <small style={styles.timerLabel}>
+                                {isExpired
+                                    ? "Waktu pembayaran telah habis"
+                                    : "Selesaikan pembayaran dalam"}
+                            </small>
 
-                        <strong
-                            style={
-                                styles.timer
-                            }
-                        >
-                            {formatTimer(
-                                timeLeft
-                            )}
-                        </strong>
+                            <strong style={styles.timer}>
+                                {formatTimer(timeLeft)}
+                            </strong>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* INFORMASI PESANAN */}
                 <div
