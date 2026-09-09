@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import Swal from "sweetalert2";
 import BottomNav from "../components/BottomNav";
 
 import {
@@ -57,9 +57,35 @@ export default function Profile() {
         }
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        const result = await Swal.fire({
+            title: "Keluar dari akun?",
+            text: "Kamu perlu login kembali untuk mengakses akun.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Keluar",
+            cancelButtonText: "Batal",
+            reverseButtons: true,
+            confirmButtonColor: "#111827",
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
         authService.logout();
-        navigate("/login");
+
+        await Swal.fire({
+            title: "Berhasil Keluar",
+            text: "Sampai jumpa kembali di KANCHA.",
+            icon: "success",
+            timer: 1300,
+            showConfirmButton: false,
+        });
+
+        navigate("/login", {
+            replace: true,
+        });
     };
 
     const getVerificationLabel = () => {
