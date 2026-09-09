@@ -1,5 +1,5 @@
-const API_URL = "http://kancha-rental-api-production.up.railway.app/api";
-
+const API_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:9090/api";
 const createBooking = async (payload) => {
     const response = await fetch(
         `${API_URL}/booking`,

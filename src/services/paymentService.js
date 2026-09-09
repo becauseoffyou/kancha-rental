@@ -1,6 +1,5 @@
 const API_URL =
-    "http://kancha-rental-api-production.up.railway.app/api";
-
+    import.meta.env.VITE_API_URL || "http://localhost:9090/api";
 const uploadProof = async (
     paymentReference,
     file
