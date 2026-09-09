@@ -1,14 +1,19 @@
 import { Link } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
+import logoKancha from "../../assets/logo_kancha.png";
 
 export default function Login() {
     return (
         <div style={styles.page}>
             <div style={styles.card}>
-                <h1 style={styles.logo}>GRIPLE</h1>
+                <img
+                    src={logoKancha}
+                    alt="KANCHA Rental"
+                    style={styles.logo}
+                />
                 <p style={styles.subtitle}>Rental Peralatan Syuting</p>
 
-                <button style={styles.googleButton}>
+                {/* <button style={styles.googleButton}>
                     <span style={styles.googleIcon}>G</span>
                     Lanjutkan dengan Google
                 </button>
@@ -17,7 +22,7 @@ export default function Login() {
                     <span style={styles.line}></span>
                     <span style={styles.or}>atau</span>
                     <span style={styles.line}></span>
-                </div>
+                </div> */}
 
                 <input style={styles.input} type="email" placeholder="Email" />
                 <input style={styles.input} type="password" placeholder="Password" />
@@ -118,5 +123,12 @@ const styles = {
     },
     link: {
         fontWeight: 700,
+    },
+    logo: {
+        width: 150,
+        height: "auto",
+        objectFit: "contain",
+        display: "block",
+        margin: "0 auto 20px",
     },
 };
