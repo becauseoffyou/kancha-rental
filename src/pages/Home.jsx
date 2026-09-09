@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { FiUser } from "react-icons/fi";
+import authService from "../services/authService";
 import kanchaLogo from "../assets/logo_kancha.png";
 import BottomNav from "../components/BottomNav";
 const categories = [
@@ -11,6 +13,7 @@ const categories = [
 ];
 
 export default function Home() {
+    const user = authService.getUser();
     return (
         <div style={styles.page}>
             <header style={styles.header}>
@@ -26,9 +29,25 @@ export default function Home() {
 
                     </div>
 
-                    <Link to="/login" style={styles.loginButton}>
-                        Login
-                    </Link>
+                    {user ? (
+                        <Link
+                            to="/profile"
+                            style={styles.profileButton}
+                        >
+                            <FiUser size={16} />
+
+                            <span>
+                                {user.name?.split(" ")[0] || "Profile"}
+                            </span>
+                        </Link>
+                    ) : (
+                        <Link
+                            to="/login"
+                            style={styles.loginButton}
+                        >
+                            Login
+                        </Link>
+                    )}
 
                 </div>
             </header>
@@ -275,5 +294,17 @@ const styles = {
         marginTop: -3,
         fontSize: 11,
         color: "#6b7280",
+    },
+    profileButton: {
+        display: "flex",
+        alignItems: "center",
+        gap: 7,
+        padding: "9px 14px",
+        borderRadius: 10,
+        background: "#111827",
+        color: "#fff",
+        fontSize: 13,
+        fontWeight: 700,
+        textDecoration: "none",
     },
 };
