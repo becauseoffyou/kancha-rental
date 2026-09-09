@@ -2,6 +2,24 @@ const API_URL =
     import.meta.env.VITE_API_URL ||
     "http://localhost:9090/api";
 
+const parseResponse = async (response) => {
+    const text = await response.text();
+
+    let result;
+
+    try {
+        result = JSON.parse(text);
+    } catch {
+        console.error("NON JSON RESPONSE:", text);
+
+        throw new Error(
+            `Server mengembalikan response tidak valid (${response.status})`
+        );
+    }
+
+    return result;
+};
+
 const submitVerification = async ({
     nik,
     fullName,
@@ -35,7 +53,8 @@ const submitVerification = async ({
         }
     );
 
-    const result = await response.json();
+    const result =
+        await parseResponse(response);
 
     if (!response.ok) {
         throw new Error(
@@ -66,7 +85,8 @@ const getMyVerification = async () => {
         }
     );
 
-    const result = await response.json();
+    const result =
+        await parseResponse(response);
 
     if (!response.ok) {
         throw new Error(
