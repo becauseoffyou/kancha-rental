@@ -115,13 +115,16 @@ export default function Checkout() {
 
             const data =
                 await bookingService.createBooking({
-                    equipment_id,
-                    start_date,
-                    end_date,
-                    pickup_method,
-                    delivery_address,
-                    notes,
-                    payment_type,
+                    equipment_id: equipmentId,
+                    start_date: startDate,
+                    end_date: endDate,
+                    pickup_method: pickupMethod,
+                    delivery_address:
+                        pickupMethod === "DELIVERY"
+                            ? address
+                            : null,
+                    notes: notes,
+                    payment_type: paymentType,
                 });
 
             console.log(
