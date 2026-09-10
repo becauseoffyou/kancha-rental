@@ -1,49 +1,127 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { FiArrowLeft, FiPrinter } from "react-icons/fi";
+import bookingService from "../services/bookingService";
 
 export default function Invoice() {
     const { id } = useParams();
 
-    const invoice = {
-        invoiceNumber: "INV-KNC-20260905-001",
-        orderNumber: id || "KNC-20260905-001",
-        customer: "Irhandy Ardiansyah",
-        email: "irhandy@email.com",
-        phone: "08xxxxxxxxxx",
+    const [bookingData, setBookingData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-        equipment: "Sony A7 III",
-        equipmentCode: "CAM-SNY-A73-001",
+    useEffect(() => {
+        loadInvoice();
+    }, [id]);
 
-        startDate: "05 September 2026",
-        endDate: "07 September 2026",
-        duration: 3,
+    const loadInvoice = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-        pricePerDay: 350000,
-        subtotal: 1050000,
-        deposit: 0,
-        total: 1050000,
+            const data = await bookingService.getByOrderNumber(id);
 
-        paymentStatus: "Belum Dibayar",
-        issuedAt: "03 September 2026",
+            setBookingData(data);
+        } catch (error) {
+            console.error("Load invoice error:", error);
+
+            setError(
+                error.message ||
+                "Gagal mengambil invoice"
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     const rupiah = (value) =>
-        `Rp${value.toLocaleString("id-ID")}`;
+        `Rp${Number(value || 0).toLocaleString("id-ID")}`;
+
+    const formatDate = (date) => {
+        if (!date) return "-";
+
+        return new Date(date).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+        });
+    };
+
+    if (loading) {
+        return (
+            <div style={{ padding: 30 }}>
+                Memuat invoice...
+            </div>
+        );
+    }
+
+    if (error || !bookingData) {
+        return (
+            <div style={{ padding: 30 }}>
+                {error || "Invoice tidak ditemukan"}
+            </div>
+        );
+    }
+
+    const booking = bookingData.booking;
+    const items = bookingData.items || [];
+    const payments = bookingData.payments || [];
+
+    const equipment = items[0];
+
+    const paidAmount = payments
+        .filter(
+            (payment) =>
+                payment.payment_status === "PAID"
+        )
+        .reduce(
+            (total, payment) =>
+                total + Number(payment.amount),
+            0
+        );
+
+    const grandTotal = Number(booking.grand_total || 0);
+
+    const remainingAmount = Math.max(
+        grandTotal - paidAmount,
+        0
+    );
+
+    let paymentStatus = "Belum Dibayar";
+
+    if (paidAmount >= grandTotal && grandTotal > 0) {
+        paymentStatus = "Lunas";
+    } else if (paidAmount > 0) {
+        paymentStatus = "DP Dibayar";
+    } else if (
+        payments.some(
+            (payment) =>
+                payment.payment_status ===
+                "WAITING_VERIFICATION"
+        )
+    ) {
+        paymentStatus = "Menunggu Verifikasi";
+    }
 
     return (
         <div style={styles.page}>
             <header style={styles.header}>
                 <div style={styles.headerInner}>
                     <Link
-                        to={`/booking/${invoice.orderNumber}`}
+                        to={`/booking/${booking.order_number}`}
                         style={styles.backButton}
                     >
                         <FiArrowLeft size={20} />
                     </Link>
 
                     <div>
-                        <small style={styles.small}>KANCHA RENTAL</small>
-                        <h2 style={styles.title}>Invoice</h2>
+                        <small style={styles.small}>
+                            KANCHA RENTAL
+                        </small>
+
+                        <h2 style={styles.title}>
+                            Invoice
+                        </h2>
                     </div>
                 </div>
             </header>
@@ -52,14 +130,17 @@ export default function Invoice() {
                 <div style={styles.invoice}>
                     <div style={styles.invoiceTop}>
                         <div>
-                            <small style={styles.label}>INVOICE</small>
+                            <small style={styles.label}>
+                                INVOICE
+                            </small>
+
                             <h2 style={styles.invoiceNumber}>
-                                {invoice.invoiceNumber}
+                                INV-{booking.order_number}
                             </h2>
                         </div>
 
                         <div style={styles.status}>
-                            {invoice.paymentStatus}
+                            {paymentStatus}
                         </div>
                     </div>
 
@@ -72,12 +153,16 @@ export default function Invoice() {
 
                         <div style={styles.row}>
                             <span>Nomor Pesanan</span>
-                            <strong>{invoice.orderNumber}</strong>
+                            <strong>
+                                {booking.order_number}
+                            </strong>
                         </div>
 
                         <div style={styles.row}>
                             <span>Tanggal Invoice</span>
-                            <strong>{invoice.issuedAt}</strong>
+                            <strong>
+                                {formatDate(booking.created_at)}
+                            </strong>
                         </div>
                     </div>
 
@@ -89,15 +174,15 @@ export default function Invoice() {
                         </small>
 
                         <h3 style={styles.customerName}>
-                            {invoice.customer}
+                            {booking.customer_name || "-"}
                         </h3>
 
                         <p style={styles.customerInfo}>
-                            {invoice.email}
+                            {booking.customer_email || "-"}
                         </p>
 
                         <p style={styles.customerInfo}>
-                            {invoice.phone}
+                            {booking.customer_phone || "-"}
                         </p>
                     </div>
 
@@ -108,34 +193,47 @@ export default function Invoice() {
                             DETAIL RENTAL
                         </small>
 
-                        <div style={styles.item}>
-                            <div>
-                                <strong>{invoice.equipment}</strong>
+                        {items.map((item) => (
+                            <div
+                                key={item.id}
+                                style={styles.item}
+                            >
+                                <div>
+                                    <strong>
+                                        {item.equipment_name}
+                                    </strong>
 
-                                <p style={styles.itemCode}>
-                                    {invoice.equipmentCode}
-                                </p>
+                                    <p style={styles.itemCode}>
+                                        Qty: {item.quantity}
+                                    </p>
+                                </div>
+
+                                <strong>
+                                    {rupiah(item.price_per_day)} / hari
+                                </strong>
                             </div>
-
-                            <strong>
-                                {rupiah(invoice.pricePerDay)} / hari
-                            </strong>
-                        </div>
+                        ))}
 
                         <div style={styles.rentalInfo}>
                             <div>
                                 <small>Mulai Rental</small>
-                                <strong>{invoice.startDate}</strong>
+                                <strong>
+                                    {formatDate(booking.start_date)}
+                                </strong>
                             </div>
 
                             <div>
                                 <small>Selesai Rental</small>
-                                <strong>{invoice.endDate}</strong>
+                                <strong>
+                                    {formatDate(booking.end_date)}
+                                </strong>
                             </div>
 
                             <div>
                                 <small>Durasi</small>
-                                <strong>{invoice.duration} Hari</strong>
+                                <strong>
+                                    {equipment?.duration || 0} Hari
+                                </strong>
                             </div>
                         </div>
                     </div>
@@ -143,25 +241,67 @@ export default function Invoice() {
                     <div style={styles.divider} />
 
                     <div style={styles.section}>
-                        <div style={styles.row}>
-                            <span>
-                                {rupiah(invoice.pricePerDay)} ×{" "}
-                                {invoice.duration} hari
-                            </span>
+                        {items.map((item) => (
+                            <div
+                                key={item.id}
+                                style={styles.row}
+                            >
+                                <span>
+                                    {item.equipment_name}
+                                    {" • "}
+                                    {rupiah(item.price_per_day)}
+                                    {" × "}
+                                    {item.duration} hari
+                                </span>
 
-                            <strong>{rupiah(invoice.subtotal)}</strong>
+                                <strong>
+                                    {rupiah(item.subtotal)}
+                                </strong>
+                            </div>
+                        ))}
+
+                        <div style={styles.row}>
+                            <span>Subtotal Rental</span>
+                            <strong>
+                                {rupiah(booking.subtotal)}
+                            </strong>
                         </div>
 
                         <div style={styles.row}>
-                            <span>Deposit</span>
-                            <strong>{rupiah(invoice.deposit)}</strong>
+                            <span>Biaya Delivery</span>
+
+                            <strong>
+                                {Number(booking.delivery_fee) === 0
+                                    ? "Gratis"
+                                    : rupiah(booking.delivery_fee)}
+                            </strong>
                         </div>
+
+                        <div style={styles.divider} />
+
+                        <div style={styles.row}>
+                            <span>Sudah Dibayar</span>
+
+                            <strong style={{ color: "#15803d" }}>
+                                {rupiah(paidAmount)}
+                            </strong>
+                        </div>
+
+                        {remainingAmount > 0 && (
+                            <div style={styles.row}>
+                                <span>Sisa Pembayaran</span>
+
+                                <strong style={{ color: "#c2410c" }}>
+                                    {rupiah(remainingAmount)}
+                                </strong>
+                            </div>
+                        )}
 
                         <div style={styles.totalBox}>
-                            <span>Total Pembayaran</span>
+                            <span>Total Pesanan</span>
 
                             <strong style={styles.total}>
-                                {rupiah(invoice.total)}
+                                {rupiah(grandTotal)}
                             </strong>
                         </div>
                     </div>

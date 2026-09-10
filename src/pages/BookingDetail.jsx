@@ -93,7 +93,7 @@ export default function BookingDetail() {
     }
 
     const rupiah = (value) =>
-        `Rp${Number(value || 0).toLocaleString("id-ID")}`;
+        `Rp. ${Number(value || 0).toLocaleString("id-ID")}`;
 
     const getPaymentStatusInfo = () => {
         switch (paymentStatus) {
