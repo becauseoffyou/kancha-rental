@@ -77,7 +77,7 @@ const createRemainingPayment = async (
 ) => {
     const token =
         localStorage.getItem(
-            "token"
+            "kancha_token"
         );
 
     const response =
