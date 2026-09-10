@@ -1,48 +1,10 @@
-import BottomNav from "../components/BottomNav";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-const bookings = [
-    {
-        id: "BK-001",
-        orderNumber: "KNC-20260905-001",
-        equipment: "Sony A7 III",
-        date: "05 Sep 2026 - 07 Sep 2026",
-        duration: 3,
-        total: 1100000,
-        paymentStatus: "UNPAID",
-        rentalStatus: "PENDING_PAYMENT",
-    },
-    {
-        id: "BK-002",
-        orderNumber: "KNC-20260901-002",
-        equipment: "Sigma 24-70mm F2.8",
-        date: "01 Sep 2026 - 02 Sep 2026",
-        duration: 2,
-        total: 500000,
-        paymentStatus: "DP_PAID",
-        rentalStatus: "WAITING_CONFIRMATION",
-    },
-    {
-        id: "BK-003",
-        orderNumber: "KNC-20260828-003",
-        equipment: "Sony FX3",
-        date: "28 Agu 2026 - 30 Agu 2026",
-        duration: 3,
-        total: 2250000,
-        paymentStatus: "PAID",
-        rentalStatus: "READY_FOR_PICKUP",
-    },
-    {
-        id: "BK-004",
-        orderNumber: "KNC-20260820-004",
-        equipment: "Godox SL60W",
-        date: "20 Agu 2026 - 21 Agu 2026",
-        duration: 2,
-        total: 240000,
-        paymentStatus: "PAID",
-        rentalStatus: "COMPLETED",
-    },
-];
+import BottomNav from "../components/BottomNav";
+import bookingService from "../services/bookingService";
+
+
 
 const getRentalStatus = (status) => {
     switch (status) {
@@ -134,6 +96,38 @@ const getPaymentStatus = (status) => {
 };
 
 export default function Booking() {
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        loadBookings();
+    }, []);
+
+    const loadBookings = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const data =
+                await bookingService.getMyBookings();
+
+            setBookings(data);
+        } catch (error) {
+            console.error(
+                "Load my bookings error:",
+                error
+            );
+
+            setError(
+                error.message ||
+                "Gagal mengambil booking"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleCancel = (bookingId) => {
         const confirmCancel = window.confirm(
             "Apakah Anda yakin ingin membatalkan pesanan ini?"
@@ -146,7 +140,17 @@ export default function Booking() {
 
     const rupiah = (value) =>
         `Rp${Number(value).toLocaleString("id-ID")}`;
+    const formatDate = (date) => {
+        if (!date) return "-";
 
+        return new Date(
+            `${date.substring(0, 10)}T00:00:00`
+        ).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
     return (
         <div style={styles.page}>
             <header style={styles.header}>
@@ -166,23 +170,29 @@ export default function Booking() {
                 <div style={styles.list}>
                     {bookings.map((booking) => {
                         const rentalStatus = getRentalStatus(
-                            booking.rentalStatus
+                            booking.rental_status
                         );
 
                         const paymentStatus = getPaymentStatus(
-                            booking.paymentStatus
+                            booking.payment_status
                         );
+
+                        const equipment =
+                            booking.items?.[0];
+
+                        const duration =
+                            equipment?.duration || 0;
 
                         return (
                             <div key={booking.id} style={styles.card}>
                                 <div style={styles.cardTop}>
                                     <div>
                                         <small style={styles.orderNumber}>
-                                            {booking.orderNumber}
+                                            {booking.order_number}
                                         </small>
 
                                         <h3 style={styles.equipmentName}>
-                                            {booking.equipment}
+                                            {equipment?.equipment_name || "-"}
                                         </h3>
                                     </div>
 
@@ -204,7 +214,9 @@ export default function Booking() {
                                         </span>
 
                                         <strong style={styles.infoValue}>
-                                            {booking.date}
+                                            {formatDate(booking.start_date)}
+                                            {" - "}
+                                            {formatDate(booking.end_date)}
                                         </strong>
                                     </div>
 
@@ -214,7 +226,7 @@ export default function Booking() {
                                         </span>
 
                                         <strong style={styles.infoValue}>
-                                            {booking.duration} Hari
+                                            {duration} Hari
                                         </strong>
                                     </div>
 
@@ -224,7 +236,7 @@ export default function Booking() {
                                         </span>
 
                                         <strong style={styles.infoValue}>
-                                            {rupiah(booking.total)}
+                                            {rupiah(booking.grand_total)}
                                         </strong>
                                     </div>
                                 </div>
@@ -252,24 +264,23 @@ export default function Booking() {
                                     }}
                                 >
                                     <Link
-                                        to={`/booking/${booking.id}`}
+                                        to={`/booking/${booking.order_number}`}
                                         style={styles.buttonLink}
                                     >
                                         Lihat Detail
                                     </Link>
 
-                                    {booking.rentalStatus ===
-                                        "PENDING_PAYMENT" && (
-                                            <button
-                                                type="button"
-                                                style={styles.cancelButton}
-                                                onClick={() =>
-                                                    handleCancel(booking.id)
-                                                }
-                                            >
-                                                Batalkan
-                                            </button>
-                                        )}
+                                    {booking.rental_status === "PENDING_PAYMENT" && (
+                                        <button
+                                            type="button"
+                                            style={styles.cancelButton}
+                                            onClick={() =>
+                                                handleCancel(booking.id)
+                                            }
+                                        >
+                                            Batalkan
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );

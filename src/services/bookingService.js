@@ -56,9 +56,43 @@ const getByOrderNumber = async (orderNumber) => {
     return result.data;
 };
 
+const getMyBookings = async () => {
+    const token =
+        localStorage.getItem("kancha_token");
+
+    if (!token) {
+        throw new Error(
+            "Silakan login terlebih dahulu"
+        );
+    }
+
+    const response = await fetch(
+        `${API_URL}/booking/me`,
+        {
+            headers: {
+                Authorization:
+                    `Bearer ${token}`,
+            },
+        }
+    );
+
+    const result =
+        await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result.message ||
+            "Gagal mengambil pesanan"
+        );
+    }
+
+    return result.data || [];
+};
+
 const bookingService = {
     createBooking,
     getByOrderNumber,
+    getMyBookings
 };
 
 export default bookingService;
