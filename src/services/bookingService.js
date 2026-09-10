@@ -1,12 +1,25 @@
 const API_URL =
     import.meta.env.VITE_API_URL || "http://localhost:9090/api";
 const createBooking = async (payload) => {
+    const token =
+        localStorage.getItem("kancha_token");
+
+    if (!token) {
+        throw new Error(
+            "Silakan login terlebih dahulu"
+        );
+    }
+
     const response = await fetch(
         `${API_URL}/booking`,
         {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type":
+                    "application/json",
+
+                Authorization:
+                    `Bearer ${token}`,
             },
             body: JSON.stringify(payload),
         }

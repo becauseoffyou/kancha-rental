@@ -1,27 +1,44 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
     FiArrowLeft,
     FiCalendar,
     FiCheckCircle,
     FiShield,
 } from "react-icons/fi";
-import { useState } from "react";
 import bookingService from "../services/bookingService";
+import authService from "../services/authService";
 
 export default function Checkout() {
     const location = useLocation();
     const navigate = useNavigate();
 
     const rental = location.state;
-    const user = {
-        name: "Irhandy Ardiansyah",
-        email: "irhandy@email.com",
-        phone: "08xxxxxxxxxx",
-        verificationStatus: "Belum Terverifikasi",
-    };
+    const [user, setUser] = useState(null);
+
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState("");
 
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                const currentUser =
+                    await authService.getMe();
+
+                setUser(currentUser);
+            } catch (error) {
+                console.error(
+                    "Load user checkout error:",
+                    error
+                );
+
+                authService.logout();
+                navigate("/login");
+            }
+        };
+
+        loadUser();
+    }, [navigate]);
     // Kalau checkout dibuka langsung tanpa pilih equipment
     if (!rental) {
         return (
@@ -98,29 +115,13 @@ export default function Checkout() {
 
             const data =
                 await bookingService.createBooking({
-                    user_id: 1, // sementara demo user
-
-                    equipment_id:
-                        rental.equipmentId,
-
-                    start_date:
-                        rental.startDate,
-
-                    end_date:
-                        rental.endDate,
-
-                    pickup_method:
-                        pickupMethod,
-
-                    delivery_address:
-                        pickupMethod === "DELIVERY"
-                            ? address
-                            : null,
-
+                    equipment_id,
+                    start_date,
+                    end_date,
+                    pickup_method,
+                    delivery_address,
                     notes,
-
-                    payment_type:
-                        paymentType,
+                    payment_type,
                 });
 
             console.log(
@@ -196,12 +197,12 @@ export default function Checkout() {
 
                     <div style={styles.customerHeader}>
                         <div style={styles.avatar}>
-                            {user.name.charAt(0)}
+                            {user?.name?.charAt(0) || "U"}
                         </div>
 
                         <div>
-                            <h3 style={styles.customerName}>{user.name}</h3>
-                            <span style={styles.customerEmail}>{user.email}</span>
+                            <h3 style={styles.customerName}>{user?.name || "-"}</h3>
+                            <span style={styles.customerEmail}>{user?.email || "-"}</span>
                         </div>
                     </div>
 
@@ -209,7 +210,7 @@ export default function Checkout() {
 
                     <div style={styles.row}>
                         <span>No. WhatsApp</span>
-                        <strong>{user.phone}</strong>
+                        <strong>{user?.phone || "-"}</strong>
                     </div>
 
                     <div style={styles.row}>
@@ -218,12 +219,19 @@ export default function Checkout() {
                         <strong
                             style={{
                                 color:
-                                    user.verificationStatus === "Terverifikasi"
+                                    user?.verification_status ===
+                                        "VERIFIED"
                                         ? "#15803d"
                                         : "#d97706",
                             }}
                         >
-                            {user.verificationStatus}
+                            {user?.verification_status === "VERIFIED"
+                                ? "Terverifikasi"
+                                : user?.verification_status === "PENDING"
+                                    ? "Sedang Diproses"
+                                    : user?.verification_status === "REJECTED"
+                                        ? "Ditolak"
+                                        : "Belum Terverifikasi"}
                         </strong>
                     </div>
                 </div>
