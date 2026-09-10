@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import {
+    Link,
+    useNavigate,
+    useParams,
+} from "react-router-dom";
+
 import bookingService from "../services/bookingService";
+import paymentService from "../services/paymentService";
+import Swal from "sweetalert2";
 import {
     FiArrowLeft,
     FiCalendar,
@@ -11,7 +18,10 @@ import {
 
 export default function BookingDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
 
+    const [creatingRemaining, setCreatingRemaining] =
+        useState(false);
     const [bookingData, setBookingData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -81,7 +91,23 @@ export default function BookingDetail() {
         Number(booking.grand_total) - paidAmount,
         0
     );
+    const remainingPayment = payments.find(
+        (payment) =>
+            payment.payment_type === "REMAINING" &&
+            [
+                "PENDING",
+                "WAITING_VERIFICATION",
+                "PAID",
+            ].includes(payment.payment_status)
+    );
 
+    const remainingWaiting =
+        remainingPayment?.payment_status ===
+        "WAITING_VERIFICATION";
+
+    const remainingPending =
+        remainingPayment?.payment_status ===
+        "PENDING";
     let paymentStatus = "UNPAID";
 
     if (
@@ -143,6 +169,58 @@ export default function BookingDetail() {
         };
 
         return labels[status] || status;
+    };
+
+    const handleRemainingPayment = async () => {
+        try {
+            setCreatingRemaining(true);
+
+            const result =
+                await Swal.fire({
+                    title: "Lunasi Sisa Pembayaran?",
+                    html: `
+                    <div style="font-size:14px">
+                        Sisa pembayaran
+                        <br>
+                        <strong style="font-size:20px">
+                            ${rupiah(remainingAmount)}
+                        </strong>
+                    </div>
+                `,
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Lunasi",
+                    cancelButtonText: "Nanti",
+                    confirmButtonColor: "#111827",
+                });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            await paymentService.createRemainingPayment(
+                booking.order_number
+            );
+
+            navigate(
+                `/payment/${booking.order_number}`
+            );
+        } catch (error) {
+            console.error(
+                "Create remaining payment error:",
+                error
+            );
+
+            Swal.fire({
+                icon: "error",
+                title: "Gagal",
+                text:
+                    error.message ||
+                    "Gagal membuat pembayaran pelunasan",
+            });
+        } finally {
+            setCreatingRemaining(false);
+        }
     };
     return (
         <div style={styles.page}>
@@ -349,44 +427,59 @@ export default function BookingDetail() {
                         Lihat Invoice
                     </Link>
 
-                    {booking.paymentStatus === "UNPAID" && (
+                    {paymentStatus === "UNPAID" && (
                         <Link
                             to={`/payment/${booking.order_number}`}
-                            state={{
-                                orderNumber: booking.orderNumber,
-                                paymentType: booking.paymentType,
-                                grandTotal: booking.total,
-                                paymentAmount:
-                                    booking.paymentType === "DP"
-                                        ? booking.total * 0.5
-                                        : booking.total,
-                                remainingAmount:
-                                    booking.paymentType === "DP"
-                                        ? booking.total * 0.5
-                                        : 0,
-                            }}
                             style={styles.payButton}
                         >
                             Bayar Sekarang
                         </Link>
                     )}
 
-                    {booking.paymentStatus === "DP_PAID" && (
+                    {paymentStatus === "DP_PAID" &&
+                        remainingAmount > 0 &&
+                        !remainingPayment && (
+                            <button
+                                type="button"
+                                onClick={handleRemainingPayment}
+                                disabled={creatingRemaining}
+                                style={{
+                                    ...styles.payButton,
+                                    opacity: creatingRemaining ? 0.6 : 1,
+                                }}
+                            >
+                                {creatingRemaining
+                                    ? "Memproses..."
+                                    : `Lunasi Sisa • ${rupiah(
+                                        remainingAmount
+                                    )}`}
+                            </button>
+                        )}
+
+                    {remainingPending && (
                         <Link
-                            to={`/payment/${booking.orderNumber}`}
-                            state={{
-                                orderNumber: booking.orderNumber,
-                                paymentType: "REMAINING",
-                                grandTotal: booking.total,
-                                paymentAmount: booking.remainingAmount,
-                                remainingAmount: 0,
-                            }}
+                            to={`/payment/${booking.order_number}`}
                             style={styles.payButton}
                         >
-                            Lunasi Sisa • {rupiah(booking.remainingAmount)}
+                            Lanjutkan Pelunasan
                         </Link>
                     )}
+
+                    {remainingWaiting && (
+                        <button
+                            type="button"
+                            disabled
+                            style={{
+                                ...styles.payButton,
+                                opacity: 0.6,
+                                cursor: "not-allowed",
+                            }}
+                        >
+                            Pelunasan Menunggu Verifikasi
+                        </button>
+                    )}
                 </div>
+
             </main>
         </div>
     );

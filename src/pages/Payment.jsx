@@ -117,26 +117,60 @@ export default function Payment() {
     // TIMER
     // ==============================
     useEffect(() => {
-        const paymentStatus =
-            bookingData?.payments?.[0]?.payment_status;
+        const payments =
+            bookingData?.payments || [];
 
-        if (paymentStatus !== "PENDING") {
+        const remainingPayment =
+            [...payments]
+                .reverse()
+                .find(
+                    (item) =>
+                        item.payment_type ===
+                        "REMAINING"
+                );
+
+        const initialPayment =
+            payments.find(
+                (item) =>
+                    item.payment_type === "DP" ||
+                    item.payment_type === "FULL"
+            );
+
+        const activePayment =
+            remainingPayment ||
+            initialPayment;
+
+        if (
+            activePayment?.payment_status !==
+            "PENDING"
+        ) {
             return;
         }
 
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    return 0;
-                }
+        setTimeLeft(30 * 60);
 
-                return prev - 1;
-            });
-        }, 1000);
+        const timer =
+            setInterval(() => {
+                setTimeLeft(
+                    (prev) => {
+                        if (prev <= 1) {
+                            clearInterval(
+                                timer
+                            );
 
-        return () => clearInterval(timer);
+                            return 0;
+                        }
+
+                        return prev - 1;
+                    }
+                );
+            }, 1000);
+
+        return () =>
+            clearInterval(timer);
     }, [bookingData]);
+
+
     const handleProofChange = (
         event
     ) => {
@@ -350,8 +384,29 @@ export default function Payment() {
     const item =
         items[0] || null;
 
+    const remainingPayment = [...payments]
+        .reverse()
+        .find(
+            (item) =>
+                item.payment_type === "REMAINING" &&
+                [
+                    "PENDING",
+                    "WAITING_VERIFICATION",
+                    "REJECTED",
+                    "PAID",
+                ].includes(item.payment_status)
+        );
+
+    const initialPayment = payments.find(
+        (item) =>
+            item.payment_type === "DP" ||
+            item.payment_type === "FULL"
+    );
+
     const payment =
-        payments[0] || null;
+        remainingPayment ||
+        initialPayment ||
+        null;
 
     const grandTotal =
         Number(

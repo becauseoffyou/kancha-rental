@@ -72,9 +72,45 @@ const confirmPayment = async (
     return result.data;
 };
 
+const createRemainingPayment = async (
+    orderNumber
+) => {
+    const token =
+        localStorage.getItem(
+            "token"
+        );
+
+    const response =
+        await fetch(
+            `${API_URL}/payments/${encodeURIComponent(
+                orderNumber
+            )}/remaining`,
+            {
+                method: "POST",
+
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+    const result =
+        await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result.message ||
+            "Gagal membuat pembayaran pelunasan"
+        );
+    }
+
+    return result.data;
+};
 const paymentService = {
     uploadProof,
     confirmPayment,
+    createRemainingPayment,
 };
 
 export default paymentService;
