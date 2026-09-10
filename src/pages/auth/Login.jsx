@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import BottomNav from "../../components/BottomNav";
 import logoKancha from "../../assets/logo_kancha.png";
 import authService from "../../services/authService";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
-
+    const [showPassword, setShowPassword] = useState(false);
     const handleLogin = async (e) => {
         e.preventDefault();
 
@@ -89,16 +90,46 @@ export default function Login() {
                         autoComplete="email"
                     />
 
-                    <input
-                        style={styles.input}
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) =>
-                            setPassword(e.target.value)
-                        }
-                        autoComplete="current-password"
-                    />
+                    <div style={styles.passwordWrapper}>
+                        <input
+                            style={{
+                                ...styles.input,
+                                paddingRight: 48,
+                            }}
+                            type={
+                                showPassword
+                                    ? "text"
+                                    : "password"
+                            }
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) =>
+                                setPassword(e.target.value)
+                            }
+                            autoComplete="current-password"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setShowPassword(
+                                    !showPassword
+                                )
+                            }
+                            style={styles.eyeButton}
+                            aria-label={
+                                showPassword
+                                    ? "Sembunyikan password"
+                                    : "Lihat password"
+                            }
+                        >
+                            {showPassword ? (
+                                <FiEyeOff size={19} />
+                            ) : (
+                                <FiEye size={19} />
+                            )}
+                        </button>
+                    </div>
 
                     <button
                         style={{
@@ -197,5 +228,24 @@ const styles = {
     link: {
         fontWeight: 700,
         color: "#111827",
+    },
+    passwordWrapper: {
+        position: "relative",
+        width: "100%",
+    },
+
+    eyeButton: {
+        position: "absolute",
+        right: 14,
+        top: 22,
+        transform: "translateY(-50%)",
+        border: 0,
+        padding: 4,
+        background: "transparent",
+        color: "#6b7280",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
     },
 };
