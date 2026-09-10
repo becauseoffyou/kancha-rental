@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import bookingService from "../services/bookingService";
 import {
     FiArrowLeft,
     FiCalendar,
@@ -10,46 +12,87 @@ import {
 export default function BookingDetail() {
     const { id } = useParams();
 
-    // sementara dummy, nanti ambil dari API berdasarkan ID
-    const booking = {
-        id: id,
-        orderNumber: "KNC-20260905-001",
+    const [bookingData, setBookingData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-        equipment: "Sony A7 III",
-        equipmentCode: "CAM-SNY-A73-001",
-        category: "Camera",
+    useEffect(() => {
+        loadBooking();
+    }, [id]);
 
-        startDate: "05 September 2026",
-        endDate: "07 September 2026",
-        duration: 3,
+    const loadBooking = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-        pricePerDay: 350000,
+            const data =
+                await bookingService.getByOrderNumber(id);
 
-        subtotal: 1050000,
-        deliveryFee: 50000,
-        total: 1100000,
+            setBookingData(data);
+        } catch (error) {
+            console.error(
+                "Load booking detail error:",
+                error
+            );
 
-        paymentType: "DP",
-        paymentStatus: "DP_PAID",
-
-        paidAmount: 550000,
-        remainingAmount: 550000,
-
-        rentalStatus: "Menunggu Konfirmasi",
-
-        accessories: [
-            "Sony A7 III Body",
-            "Battery NP-FZ100 × 2",
-            "Battery Charger",
-            "Strap",
-            "Body Cap",
-            "Memory Card 64GB",
-            "Camera Bag",
-        ],
+            setError(
+                error.message ||
+                "Gagal mengambil detail booking"
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const getPaymentStatus = () => {
-        switch (booking.paymentStatus) {
+    if (loading) {
+        return (
+            <div style={{ padding: 30 }}>
+                Memuat detail booking...
+            </div>
+        );
+    }
+
+    if (error || !bookingData) {
+        return (
+            <div style={{ padding: 30 }}>
+                {error || "Booking tidak ditemukan"}
+            </div>
+        );
+    }
+
+    const booking = bookingData.booking;
+    const items = bookingData.items || [];
+    const payments = bookingData.payments || [];
+
+    const equipment = items[0];
+
+    const paidAmount = payments
+        .filter(
+            (payment) =>
+                payment.payment_status === "PAID"
+        )
+        .reduce(
+            (total, payment) =>
+                total + Number(payment.amount),
+            0
+        );
+
+    const remainingAmount = Math.max(
+        Number(booking.grand_total) - paidAmount,
+        0
+    );
+
+    let paymentStatus = "UNPAID";
+
+    if (
+        paidAmount >= Number(booking.grand_total)
+    ) {
+        paymentStatus = "PAID";
+    } else if (paidAmount > 0) {
+        paymentStatus = "DP_PAID";
+    }
+    const getPaymentStatusInfo = () => {
+        switch (paymentStatus) {
             case "DP_PAID":
                 return {
                     label: "DP 50% Dibayar",
@@ -73,11 +116,30 @@ export default function BookingDetail() {
         }
     };
 
-    const paymentStatus = getPaymentStatus();
+    const paymentStatusInfo =
+        getPaymentStatusInfo();
+    const getRentalStatusLabel = (status) => {
+        const labels = {
+            PENDING_PAYMENT:
+                "Menunggu Pembayaran",
+            WAITING_CONFIRMATION:
+                "Menunggu Konfirmasi",
+            CONFIRMED:
+                "Dikonfirmasi",
+            READY_FOR_PICKUP:
+                "Siap Diambil",
+            RENTED:
+                "Sedang Disewa",
+            OVERDUE:
+                "Terlambat",
+            COMPLETED:
+                "Selesai",
+            CANCELLED:
+                "Dibatalkan",
+        };
 
-    const rupiah = (value) =>
-        `Rp${Number(value).toLocaleString("id-ID")}`;
-
+        return labels[status] || status;
+    };
     return (
         <div style={styles.page}>
             {/* HEADER */}
@@ -104,7 +166,9 @@ export default function BookingDetail() {
                     <div>
                         <small style={styles.statusLabel}>Status Rental</small>
                         <h3 style={styles.statusTitle}>
-                            {booking.rentalStatus}
+                            {getRentalStatusLabel(
+                                booking.rental_status
+                            )}
                         </h3>
                     </div>
                 </div>
@@ -113,34 +177,40 @@ export default function BookingDetail() {
 
                     <div style={styles.row}>
                         <span>Nomor Pesanan</span>
-                        <strong>{booking.orderNumber}</strong>
+                        <strong>{booking.order_number}</strong>
                     </div>
 
                     <div style={styles.row}>
                         <span>Tanggal Pesanan</span>
-                        <strong>{booking.bookingDate}</strong>
+                        <strong>{new Date(
+                            booking.created_at
+                        ).toLocaleDateString("id-ID", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                        })}</strong>
                     </div>
 
                     <div style={styles.row}>
                         <span>Kode Unit</span>
-                        <strong>{booking.equipmentCode}</strong>
+                        {/* <strong>{booking.equipment_code}</strong> */}
                     </div>
 
                     <div style={styles.divider} />
 
                     <div style={styles.row}>
                         <span>Mulai Rental</span>
-                        <strong>{booking.startDate}</strong>
+                        <strong>{booking.start_date}</strong>
                     </div>
 
                     <div style={styles.row}>
                         <span>Selesai Rental</span>
-                        <strong>{booking.endDate}</strong>
+                        <strong>{booking.end_date}</strong>
                     </div>
 
                     <div style={styles.row}>
                         <span>Durasi Rental</span>
-                        <strong>{booking.duration} Hari</strong>
+                        <strong>{equipment?.duration || 0} Hari</strong>
                     </div>
                 </div>
 
@@ -157,18 +227,22 @@ export default function BookingDetail() {
                             </small>
 
                             <h3 style={styles.equipmentName}>
-                                {booking.equipment}
+                                {equipment?.equipment_name || "-"}
                             </h3>
 
                             <p style={styles.price}>
-                                Rp{booking.pricePerDay.toLocaleString("id-ID")}
-                                <span style={styles.day}> / hari</span>
+                                {rupiah(
+                                    equipment?.price_per_day || 0
+                                )}
+                                <span style={styles.day}>
+                                    {" "}/ hari
+                                </span>
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div style={styles.card}>
+                {/* <div style={styles.card}>
                     <small style={styles.cardLabel}>KELENGKAPAN EQUIPMENT</small>
 
                     <div style={styles.accessoryList}>
@@ -180,7 +254,7 @@ export default function BookingDetail() {
                             </div>
                         ))}
                     </div>
-                </div>
+                </div> */}
 
                 {/* DETAIL RENTAL */}
 
@@ -192,7 +266,7 @@ export default function BookingDetail() {
                     <div style={styles.row}>
                         <span>Metode Pembayaran</span>
                         <strong>
-                            {booking.paymentType === "DP"
+                            {booking.payment_type === "DP"
                                 ? "DP 50%"
                                 : "Bayar Lunas"}
                         </strong>
@@ -204,11 +278,11 @@ export default function BookingDetail() {
                         <span
                             style={{
                                 ...styles.paymentBadge,
-                                color: paymentStatus.color,
-                                background: paymentStatus.background,
+                                color: paymentStatusInfo.color,
+                                background: paymentStatusInfo.background,
                             }}
                         >
-                            {paymentStatus.label}
+                            {paymentStatusInfo.label}
                         </span>
                     </div>
 
@@ -222,15 +296,15 @@ export default function BookingDetail() {
                     <div style={styles.row}>
                         <span>Biaya Delivery</span>
                         <strong>
-                            {booking.deliveryFee === 0
+                            {Number(booking.delivery_fee) === 0
                                 ? "Gratis"
-                                : rupiah(booking.deliveryFee)}
+                                : rupiah(booking.delivery_fee)}
                         </strong>
                     </div>
 
                     <div style={styles.row}>
                         <span>Total Pesanan</span>
-                        <strong>{rupiah(booking.total)}</strong>
+                        <strong>{rupiah(booking.grand_total)}</strong>
                     </div>
 
                     <div style={styles.divider} />
@@ -238,15 +312,18 @@ export default function BookingDetail() {
                     <div style={styles.row}>
                         <span>Sudah Dibayar</span>
                         <strong style={{ color: "#15803d" }}>
-                            {rupiah(booking.paidAmount)}
+                            {rupiah(paidAmount)}
                         </strong>
                     </div>
 
-                    {booking.remainingAmount > 0 && (
+                    {remainingAmount > 0 && (
                         <div style={styles.row}>
                             <span>Sisa Pembayaran</span>
-                            <strong style={{ color: "#c2410c" }}>
-                                {rupiah(booking.remainingAmount)}
+
+                            <strong
+                                style={{ color: "#c2410c" }}
+                            >
+                                {rupiah(remainingAmount)}
                             </strong>
                         </div>
                     )}
@@ -261,7 +338,7 @@ export default function BookingDetail() {
                 {/* ACTION */}
                 <div style={styles.actions}>
                     <Link
-                        to={`/invoice/${booking.id}`}
+                        to={`/invoice/${booking.order_number}`}
                         style={styles.invoiceButton}
                     >
                         <FiFileText size={17} />
@@ -270,7 +347,7 @@ export default function BookingDetail() {
 
                     {booking.paymentStatus === "UNPAID" && (
                         <Link
-                            to={`/payment/${booking.orderNumber}`}
+                            to={`/payment/${booking.order_number}`}
                             state={{
                                 orderNumber: booking.orderNumber,
                                 paymentType: booking.paymentType,
