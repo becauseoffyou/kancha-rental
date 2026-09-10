@@ -76,14 +76,29 @@ export default function Invoice() {
     };
 
     const getPaymentMethod = (payment) => {
-        return (
-            payment.bank_name ||
-            payment.payment_method ||
-            payment.bank ||
-            payment.payment_channel ||
-            payment.channel ||
-            "-"
-        );
+        if (payment.payment_method === "TRANSFER") {
+            if (payment.bank_code) {
+                return `Transfer ${payment.bank_code}`;
+            }
+
+            if (payment.payment_channel) {
+                return `Transfer ${payment.payment_channel}`;
+            }
+
+            return "Transfer Bank";
+        }
+
+        if (payment.payment_method === "QRIS") {
+            return payment.payment_channel
+                ? `QRIS ${payment.payment_channel}`
+                : "QRIS";
+        }
+
+        if (payment.payment_channel) {
+            return payment.payment_channel;
+        }
+
+        return payment.payment_method || "-";
     };
 
     const getPaymentStatusLabel = (status) => {
