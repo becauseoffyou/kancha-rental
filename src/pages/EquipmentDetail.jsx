@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import equipmentService from "../services/equipmentService";
+import Swal from "sweetalert2";
+import authService from "../services/authService";
 
 export default function EquipmentDetail() {
     const { id } = useParams();
@@ -123,43 +125,134 @@ export default function EquipmentDetail() {
         );
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
+        // 1. Validasi periode rental
         if (!startDate || !endDate || duration <= 0) {
-            alert(
-                "Silakan pilih periode rental terlebih dahulu."
-            );
+            await Swal.fire({
+                icon: "warning",
+                title: "Pilih Periode Rental",
+                text: "Silakan pilih periode rental terlebih dahulu.",
+                confirmButtonColor: "#111827",
+            });
+
             return;
         }
 
+        // 2. Validasi ketersediaan
         if (!availability) {
-            alert(
-                "Ketersediaan equipment belum berhasil dicek."
-            );
+            await Swal.fire({
+                icon: "warning",
+                title: "Ketersediaan Belum Dicek",
+                text: "Ketersediaan equipment belum berhasil dicek.",
+                confirmButtonColor: "#111827",
+            });
+
             return;
         }
 
         if (!availability.available) {
-            alert(
-                "Equipment tidak tersedia pada periode tersebut."
-            );
+            await Swal.fire({
+                icon: "error",
+                title: "Equipment Tidak Tersedia",
+                text: "Equipment tidak tersedia pada periode tersebut.",
+                confirmButtonColor: "#111827",
+            });
+
             return;
         }
 
-        navigate("/checkout", {
-            state: {
-                equipmentId: equipment.id,
-                equipmentName: equipment.name,
-                equipmentCode: null,
-                pricePerDay,
-                startDate,
-                endDate,
-                duration,
-                total,
+        // 3. Cek apakah user sudah login
+        const token = authService.getToken();
 
-                availableUnits:
-                    availability.available_units,
-            },
-        });
+        if (!token) {
+            const result = await Swal.fire({
+                icon: "info",
+                title: "Login Diperlukan",
+                text: "Silakan login terlebih dahulu untuk melakukan rental.",
+                showCancelButton: true,
+                confirmButtonText: "Login",
+                cancelButtonText: "Batal",
+                confirmButtonColor: "#111827",
+            });
+
+            if (result.isConfirmed) {
+                navigate("/login");
+            }
+
+            return;
+        }
+
+        // 4. Ambil data user terbaru dari backend
+        try {
+            const user = await authService.getMe();
+
+            // 5. Cek status verifikasi
+            if (user.verification_status !== "VERIFIED") {
+                let title = "Verifikasi Identitas Diperlukan";
+                let text =
+                    "Silakan verifikasi identitas terlebih dahulu sebelum melakukan rental.";
+
+                if (user.verification_status === "PENDING") {
+                    title = "Verifikasi Sedang Diproses";
+                    text =
+                        "Data identitas kamu masih dalam proses pemeriksaan admin.";
+                }
+
+                if (user.verification_status === "REJECTED") {
+                    title = "Verifikasi Ditolak";
+                    text =
+                        "Silakan periksa alasan penolakan dan kirim ulang verifikasi identitas.";
+                }
+
+                const result = await Swal.fire({
+                    icon:
+                        user.verification_status === "REJECTED"
+                            ? "error"
+                            : "info",
+                    title,
+                    text,
+                    showCancelButton: true,
+                    confirmButtonText: "Lihat Verifikasi",
+                    cancelButtonText: "Batal",
+                    confirmButtonColor: "#111827",
+                });
+
+                if (result.isConfirmed) {
+                    navigate("/verification");
+                }
+
+                return;
+            }
+
+            // 6. VERIFIED -> boleh checkout
+            navigate("/checkout", {
+                state: {
+                    equipmentId: equipment.id,
+                    equipmentName: equipment.name,
+                    equipmentCode: null,
+                    pricePerDay,
+                    startDate,
+                    endDate,
+                    duration,
+                    total,
+                    availableUnits:
+                        availability.available_units,
+                },
+            });
+        } catch (error) {
+            console.error("Checkout auth error:", error);
+
+            authService.logout();
+
+            await Swal.fire({
+                icon: "warning",
+                title: "Sesi Berakhir",
+                text: "Silakan login kembali untuk melanjutkan.",
+                confirmButtonColor: "#111827",
+            });
+
+            navigate("/login");
+        }
     };
 
     if (loading) {
