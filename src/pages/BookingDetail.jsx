@@ -91,6 +91,10 @@ export default function BookingDetail() {
     } else if (paidAmount > 0) {
         paymentStatus = "DP_PAID";
     }
+
+    const rupiah = (value) =>
+        `Rp${Number(value || 0).toLocaleString("id-ID")}`;
+
     const getPaymentStatusInfo = () => {
         switch (paymentStatus) {
             case "DP_PAID":
