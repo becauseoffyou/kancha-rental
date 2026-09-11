@@ -1,6 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import {
+    MapContainer,
+    TileLayer,
+    Marker,
+    useMapEvents,
+    useMap,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
@@ -38,6 +44,24 @@ function LocationPicker({ position, setPosition }) {
             icon={markerIcon}
         />
     );
+}
+
+function MapController({ position }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!position) return;
+
+        map.flyTo(
+            [position.lat, position.lng],
+            16,
+            {
+                duration: 1.2,
+            }
+        );
+    }, [position, map]);
+
+    return null;
 }
 
 export default function Checkout() {
@@ -428,6 +452,7 @@ export default function Checkout() {
                                         position={deliveryPosition}
                                         setPosition={setDeliveryPosition}
                                     />
+                                    <MapController position={deliveryPosition} />
                                 </MapContainer>
                             </div>
 
