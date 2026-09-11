@@ -1053,61 +1053,44 @@ export default function Payment() {
                                     BUKTI TRANSFER
                                 </small>
 
-                                <label style={styles.uploadBox}>
-                                    <input
-                                        type="file"
-                                        accept="image/jpeg,image/png,image/webp"
-                                        onChange={
-                                            handleProofChange
-                                        }
-                                        style={{
-                                            display:
-                                                "none",
-                                        }}
-                                    />
+                                {!payment?.proof_url ? (
+                                    <>
+                                        <label style={styles.uploadBox}>
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={handleProofChange}
+                                                style={{
+                                                    display: "none",
+                                                }}
+                                            />
 
-                                    <strong>
-                                        {proofFile
-                                            ? "Ganti Bukti Transfer"
-                                            : "Upload Bukti Transfer"}
-                                    </strong>
+                                            <strong>
+                                                {proofFile
+                                                    ? "Ganti Bukti Transfer"
+                                                    : "Upload Bukti Transfer"}
+                                            </strong>
 
-                                    <span>
-                                        JPG, PNG, WEBP
-                                        maksimal 5 MB
-                                    </span>
-                                </label>
+                                            <span>
+                                                JPG, PNG, WEBP maksimal 5 MB
+                                            </span>
+                                        </label>
 
-                                {proofPreview && (
-                                    <div
-                                        style={
-                                            styles.previewBox
-                                        }
-                                    >
-                                        <img
-                                            src={
-                                                proofPreview
-                                            }
-                                            alt="Bukti transfer"
-                                            style={
-                                                styles.previewImage
-                                            }
-                                        />
+                                        {proofPreview && (
+                                            <div style={styles.previewBox}>
+                                                <img
+                                                    src={proofPreview}
+                                                    alt="Bukti transfer"
+                                                    style={styles.previewImage}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div style={styles.uploadedProof}>
+                                        ✓ Bukti transfer sudah diupload
                                     </div>
                                 )}
-
-                                {!proofPreview &&
-                                    payment
-                                        ?.proof_url && (
-                                        <div
-                                            style={
-                                                styles.uploadedProof
-                                            }
-                                        >
-                                            ✓ Bukti transfer
-                                            sudah diupload
-                                        </div>
-                                    )}
                             </div>
                         </div>
                     )}
