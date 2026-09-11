@@ -247,10 +247,27 @@ export default function Checkout() {
                     start_date: startDate,
                     end_date: endDate,
                     pickup_method: pickupMethod,
+
                     delivery_address:
                         pickupMethod === "DELIVERY"
                             ? address
                             : null,
+
+                    delivery_latitude:
+                        pickupMethod === "DELIVERY"
+                            ? deliveryPosition?.lat
+                            : null,
+
+                    delivery_longitude:
+                        pickupMethod === "DELIVERY"
+                            ? deliveryPosition?.lng
+                            : null,
+
+                    delivery_distance_km:
+                        pickupMethod === "DELIVERY"
+                            ? Number(deliveryDistance.toFixed(2))
+                            : null,
+
                     notes: notes,
                     payment_type: paymentType,
                 });
