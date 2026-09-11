@@ -230,29 +230,32 @@ export default function Profile() {
                     </button>
                 </div>
 
-                <div style={styles.menuCard}>
-                    <MenuItem
-                        icon={<FiShield />}
-                        title="Verifikasi Identitas"
-                        subtitle={
-                            user.verification_status ===
-                                "PENDING"
-                                ? "Menunggu pemeriksaan admin"
-                                : user.verification_status ===
-                                    "VERIFIED"
-                                    ? "Identitas sudah terverifikasi"
-                                    : user.verification_status ===
-                                        "REJECTED"
-                                        ? "Verifikasi perlu dikirim ulang"
-                                        : "KTP dan verifikasi wajah"
-                        }
-                        onClick={() =>
-                            navigate(
-                                "/verification"
-                            )
-                        }
-                    />
 
+                <div style={styles.menuCard}>
+                    {user?.verification_status !== "VERIFIED" && (
+                        // menu Verifikasi Identitas yang sekarang
+                        <MenuItem
+                            icon={<FiShield />}
+                            title="Verifikasi Identitas"
+                            subtitle={
+                                user.verification_status ===
+                                    "PENDING"
+                                    ? "Menunggu pemeriksaan admin"
+                                    : user.verification_status ===
+                                        "VERIFIED"
+                                        ? "Identitas sudah terverifikasi"
+                                        : user.verification_status ===
+                                            "REJECTED"
+                                            ? "Verifikasi perlu dikirim ulang"
+                                            : "KTP dan verifikasi wajah"
+                            }
+                            onClick={() =>
+                                navigate(
+                                    "/verification"
+                                )
+                            }
+                        />
+                    )}
                     <MenuItem
                         icon={<FiFileText />}
                         title="Riwayat Booking"
