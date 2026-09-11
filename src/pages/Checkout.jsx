@@ -1,5 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import {
     FiArrowLeft,
     FiCalendar,
@@ -8,6 +11,34 @@ import {
 } from "react-icons/fi";
 import bookingService from "../services/bookingService";
 import authService from "../services/authService";
+
+const markerIcon = new L.Icon({
+    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+});
+
+function LocationPicker({ position, setPosition }) {
+    useMapEvents({
+        click(e) {
+            setPosition({
+                lat: e.latlng.lat,
+                lng: e.latlng.lng,
+            });
+        },
+    });
+
+    if (!position) return null;
+
+    return (
+        <Marker
+            position={[position.lat, position.lng]}
+            icon={markerIcon}
+        />
+    );
+}
 
 export default function Checkout() {
     const location = useLocation();
@@ -78,6 +109,7 @@ export default function Checkout() {
     };
     const [pickupMethod, setPickupMethod] = useState("PICKUP");
     const [address, setAddress] = useState("");
+    const [deliveryPosition, setDeliveryPosition] = useState(null);
     const [notes, setNotes] = useState("");
     const [paymentType, setPaymentType] = useState("DP");
 
@@ -195,7 +227,7 @@ export default function Checkout() {
                         </div>
                     </div>
                 </div>
-                <div style={styles.card}>
+                {/* <div style={styles.card}>
                     <small style={styles.cardLabel}>DATA PENYEWA</small>
 
                     <div style={styles.customerHeader}>
@@ -237,7 +269,7 @@ export default function Checkout() {
                                         : "Belum Terverifikasi"}
                         </strong>
                     </div>
-                </div>
+                </div> */}
                 {/* PERIODE */}
                 <div style={styles.card}>
                     <small style={styles.cardLabel}>PERIODE RENTAL</small>
@@ -316,17 +348,44 @@ export default function Checkout() {
                                 placeholder="Masukkan alamat lengkap pengiriman..."
                                 style={styles.textarea}
                             />
+                            <div
+                                style={{
+                                    height: 280,
+                                    borderRadius: 12,
+                                    overflow: "hidden",
+                                    marginTop: 10,
+                                    border: "1px solid #e5e7eb",
+                                }}
+                            >
+                                <MapContainer
+                                    center={[-6.2, 106.816666]}
+                                    zoom={11}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                    }}
+                                >
+                                    <TileLayer
+                                        attribution="&copy; OpenStreetMap contributors"
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    />
 
-                            <small style={styles.deliveryNote}>
-                                Biaya delivery sementara Rp. 35.000 / KM Nanti dapat
-                                dihitung berdasarkan jarak/lokasi.
+                                    <LocationPicker
+                                        position={deliveryPosition}
+                                        setPosition={setDeliveryPosition}
+                                    />
+                                </MapContainer>
+                            </div>
+
+                            <small style={{ fontSize: 10, color: "#6b7280" }}>
+                                Klik titik lokasi tujuan pengiriman pada peta.
                             </small>
                         </div>
                     )}
                 </div>
 
                 <div style={styles.card}>
-                    <small style={styles.cardLabel}>CATATAN PESANAN</small>
+                    <small style={styles.cardLabel}>CATATAN PESANAN (Opsional)</small>
 
                     <textarea
                         value={notes}
@@ -834,7 +893,7 @@ const styles = {
     },
 
     deliveryNote: {
-        color: "#9ca3af",
+        color: "#bc0909",
         fontSize: 9,
         lineHeight: 1.5,
     },
