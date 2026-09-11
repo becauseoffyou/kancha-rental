@@ -339,7 +339,72 @@ export default function BookingDetail() {
                 </div> */}
 
                 {/* DETAIL RENTAL */}
+                {/* DETAIL PENGAMBILAN */}
+                <div style={styles.card}>
+                    <small style={styles.cardLabel}>
+                        DETAIL PENGAMBILAN
+                    </small>
 
+                    <div style={styles.row}>
+                        <span>Metode Pengambilan</span>
+                        <strong>
+                            {booking.pickup_method === "DELIVERY"
+                                ? "Delivery"
+                                : "Ambil di KANCHA"}
+                        </strong>
+                    </div>
+
+                    {booking.pickup_method === "DELIVERY" && (
+                        <>
+                            <div style={styles.divider} />
+
+                            <div style={styles.row}>
+                                <span>Jarak Pengiriman</span>
+                                <strong>
+                                    {Number(
+                                        booking.delivery_distance_km || 0
+                                    ).toFixed(2)}{" "}
+                                    km
+                                </strong>
+                            </div>
+
+                            <div style={styles.row}>
+                                <span>Biaya Delivery</span>
+                                <strong>
+                                    {rupiah(booking.delivery_fee)}
+                                </strong>
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: 10,
+                                    padding: 12,
+                                    borderRadius: 10,
+                                    background: "#f9fafb",
+                                }}
+                            >
+                                <small
+                                    style={{
+                                        display: "block",
+                                        color: "#9ca3af",
+                                        marginBottom: 5,
+                                    }}
+                                >
+                                    ALAMAT DELIVERY
+                                </small>
+
+                                <strong
+                                    style={{
+                                        fontSize: 12,
+                                        lineHeight: 1.5,
+                                    }}
+                                >
+                                    {booking.delivery_address || "-"}
+                                </strong>
+                            </div>
+                        </>
+                    )}
+                </div>
 
                 {/* PEMBAYARAN */}
                 <div style={styles.card}>
