@@ -64,6 +64,38 @@ function MapController({ position }) {
     return null;
 }
 
+const KANCHA_LOCATION = {
+    lat: -6.180541010134697,
+    lng: 106.95234463499482,
+};
+
+const calculateDistanceKm = (lat1, lng1, lat2, lng2) => {
+    const R = 6371;
+
+    const dLat =
+        ((lat2 - lat1) * Math.PI) / 180;
+
+    const dLng =
+        ((lng2 - lng1) * Math.PI) / 180;
+
+    const a =
+        Math.sin(dLat / 2) *
+        Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+
+    const c =
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        );
+
+    return R * c;
+};
+
 export default function Checkout() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -141,8 +173,25 @@ export default function Checkout() {
     const [paymentType, setPaymentType] = useState("DP");
 
     // 1. Hitung ongkir dulu
+    const deliveryDistance =
+        pickupMethod === "DELIVERY" &&
+            deliveryPosition
+            ? calculateDistanceKm(
+                KANCHA_LOCATION.lat,
+                KANCHA_LOCATION.lng,
+                deliveryPosition.lat,
+                deliveryPosition.lng
+            )
+            : 0;
+
     const deliveryFee =
-        pickupMethod === "DELIVERY" ? 50000 : 0;
+        pickupMethod === "DELIVERY" &&
+            deliveryDistance > 0
+            ? Math.max(
+                20000,
+                Math.ceil(deliveryDistance) * 10000
+            )
+            : 0;
 
     // 2. Baru hitung grand total
     const grandTotal = total + deliveryFee;
@@ -574,7 +623,15 @@ export default function Checkout() {
                         <span>Subtotal Rental</span>
                         <strong>{rupiah(total)}</strong>
                     </div>
-
+                    {pickupMethod === "DELIVERY" &&
+                        deliveryPosition && (
+                            <div style={styles.row}>
+                                <span>Jarak Pengiriman</span>
+                                <strong>
+                                    {deliveryDistance.toFixed(1)} km
+                                </strong>
+                            </div>
+                        )}
                     <div style={styles.row}>
                         <span>Biaya Pengiriman</span>
                         <strong>
