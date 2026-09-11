@@ -32,8 +32,8 @@ const getRentalStatus = (status) => {
         case "READY_FOR_PICKUP":
             return {
                 label: "Siap Diambil",
-                color: "#0369a1",
-                background: "#f0f9ff",
+                color: "#15803d",
+                background: "#dcfce7",
             };
 
         case "RENTED":
@@ -153,6 +153,25 @@ export default function Booking() {
     };
     return (
         <div style={styles.page}>
+            <style>
+                {`
+        @keyframes readyPickupBlink {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.25;
+                transform: scale(1.08);
+            }
+        }
+
+        .ready-pickup-blink {
+            animation: readyPickupBlink 0.9s infinite;
+        }
+    `}
+            </style>
             <header style={styles.header}>
                 <div style={styles.headerInner}>
                     <div>
@@ -197,6 +216,11 @@ export default function Booking() {
                                     </div>
 
                                     <span
+                                        className={
+                                            booking.rental_status === "READY_FOR_PICKUP"
+                                                ? "ready-pickup-blink"
+                                                : ""
+                                        }
                                         style={{
                                             ...styles.statusBadge,
                                             color: rentalStatus.color,
