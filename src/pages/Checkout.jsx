@@ -49,6 +49,9 @@ export default function Checkout() {
 
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState("");
+    const [searchAddress, setSearchAddress] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [searchingAddress, setSearchingAddress] = useState(false);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -131,7 +134,27 @@ export default function Checkout() {
         paymentType === "DP"
             ? grandTotal - paymentAmount
             : 0;
+    const handleSearchAddress = async () => {
+        if (!searchAddress.trim()) return;
 
+        try {
+            setSearchingAddress(true);
+
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                    searchAddress
+                )}&countrycodes=id&limit=5`
+            );
+
+            const data = await response.json();
+
+            setSearchResults(data);
+        } catch (error) {
+            console.error("Search address error:", error);
+        } finally {
+            setSearchingAddress(false);
+        }
+    };
     const handleBooking = async () => {
         if (
             pickupMethod === "DELIVERY" &&
@@ -342,12 +365,43 @@ export default function Checkout() {
                                 Alamat Pengiriman
                             </label>
 
-                            <textarea
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                                placeholder="Masukkan alamat lengkap pengiriman..."
-                                style={styles.textarea}
-                            />
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: 8,
+                                    marginTop: 10,
+                                }}
+                            >
+                                <input
+                                    type="text"
+                                    value={searchAddress}
+                                    onChange={(e) => setSearchAddress(e.target.value)}
+                                    placeholder="Cari alamat pengiriman..."
+                                    style={{
+                                        flex: 1,
+                                        padding: 11,
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: 10,
+                                        fontSize: 12,
+                                    }}
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={handleSearchAddress}
+                                    style={{
+                                        padding: "0 14px",
+                                        border: 0,
+                                        borderRadius: 10,
+                                        background: "#111827",
+                                        color: "#fff",
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    {searchingAddress ? "..." : "Cari"}
+                                </button>
+                            </div>
                             <div
                                 style={{
                                     height: 280,
@@ -377,9 +431,47 @@ export default function Checkout() {
                                 </MapContainer>
                             </div>
 
-                            <small style={{ fontSize: 10, color: "#6b7280" }}>
-                                Klik titik lokasi tujuan pengiriman pada peta.
-                            </small>
+                            {searchResults.length > 0 && (
+                                <div
+                                    style={{
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 10,
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    {searchResults.map((item) => (
+                                        <button
+                                            key={item.place_id}
+                                            type="button"
+                                            onClick={() => {
+                                                const lat = Number(item.lat);
+                                                const lng = Number(item.lon);
+
+                                                setDeliveryPosition({
+                                                    lat,
+                                                    lng,
+                                                });
+
+                                                setAddress(item.display_name);
+                                                setSearchAddress(item.display_name);
+                                                setSearchResults([]);
+                                            }}
+                                            style={{
+                                                width: "100%",
+                                                padding: 10,
+                                                border: 0,
+                                                borderBottom: "1px solid #f3f4f6",
+                                                background: "#fff",
+                                                textAlign: "left",
+                                                fontSize: 11,
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            {item.display_name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
